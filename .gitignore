@@ -1,0 +1,24 @@
+*.exe
+*.dll
+*.so
+*.dylib
+*.wasm
+*.o
+
+*/main
+*/main.exe
+*/bin/
+!*/bin/.gitkeep # If you want to keep an empty bin directory
+
+
+.cache/
+vendor/
+
+test/
+*.test
+
+.vscode/
+
+
+*.log
+*.tmp
