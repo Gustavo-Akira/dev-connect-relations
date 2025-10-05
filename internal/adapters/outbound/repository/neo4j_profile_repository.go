@@ -27,3 +27,11 @@ func (r *Neo4jProfileRepository) CreateProfile(ctx context.Context, profile *ent
 	println(result.Records)
 	return *profile, nil
 }
+
+func (r *Neo4jProfileRepository) DeleteProfile(ctx context.Context, id int32) error {
+	params := map[string]any{
+		"id": id,
+	}
+	_, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (p:Profile {id: $id}) DELETE p;", params, neo4j.EagerResultTransformer)
+	return err
+}
