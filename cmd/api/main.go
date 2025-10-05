@@ -42,5 +42,6 @@ func main() {
 	profile_service := service.CreateNewProfileService(repo)
 	profile_controller := rest.CreateNewProfileController(*profile_service)
 	router.POST("/profile", profile_controller.CreateProfile)
+	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
 	router.Run()
 }

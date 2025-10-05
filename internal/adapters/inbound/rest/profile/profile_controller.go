@@ -5,6 +5,7 @@ import (
 	"devconnectrelations/internal/domain/entities"
 	"devconnectrelations/internal/domain/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,4 +36,19 @@ func (c *ProfileController) CreateProfile(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, gin.H{"profile": result})
+}
+
+func (c *ProfileController) DeleteProfile(ctx *gin.Context) {
+	id := ctx.Param("id")
+	parsedInt, parsedError := strconv.ParseInt(id, 10, 32)
+	if parsedError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
+		return
+	}
+	err := c.service.DeleteProfile(ctx, int32(parsedInt))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusNoContent, gin.H{})
 }
