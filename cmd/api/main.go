@@ -47,6 +47,7 @@ func main() {
 	rest_relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
 	router.POST("/relation", rest_relation_controller.CreateRelation)
 	router.POST("/profile", profile_controller.CreateProfile)
+	router.GET("/relation/:fromId", rest_relation_controller.GetAllRelationsByFromId)
 	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
 	router.Run()
 }

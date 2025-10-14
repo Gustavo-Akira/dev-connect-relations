@@ -5,6 +5,7 @@ import (
 	"devconnectrelations/internal/domain/entities"
 	"devconnectrelations/internal/domain/service"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -35,4 +36,19 @@ func (c *RelationController) CreateRelation(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, gin.H{"relation": savedRelation})
+}
+
+func (c *RelationController) GetAllRelationsByFromId(ctx *gin.Context) {
+	fromId := ctx.Param("fromId")
+	parsedInt, parsedError := strconv.ParseInt(fromId, 10, 32)
+	if parsedError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
+		return
+	}
+	relations, err := c.service.GetAllRelationsByFromId(ctx, int32(parsedInt))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"relations": relations})
 }
