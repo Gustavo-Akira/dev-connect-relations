@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
+	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
 	"devconnectrelations/internal/adapters/outbound/repository"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
@@ -41,6 +42,10 @@ func main() {
 	repo := repository.NewNeo4jProfileRepository(driver)
 	profile_service := service.CreateNewProfileService(repo)
 	profile_controller := rest.CreateNewProfileController(*profile_service)
+	realtion_repo := repository.NewNeo4jRelationRepository(driver)
+	relation_service := service.CreateRelationService(realtion_repo)
+	rest_relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
+	router.POST("/relation", rest_relation_controller.CreateRelation)
 	router.POST("/profile", profile_controller.CreateProfile)
 	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
 	router.Run()
