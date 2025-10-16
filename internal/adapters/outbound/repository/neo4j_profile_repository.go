@@ -28,7 +28,7 @@ func (r *Neo4jProfileRepository) CreateProfile(ctx context.Context, profile *ent
 	return *profile, nil
 }
 
-func (r *Neo4jProfileRepository) DeleteProfile(ctx context.Context, id int32) error {
+func (r *Neo4jProfileRepository) DeleteProfile(ctx context.Context, id int64) error {
 	params := map[string]any{
 		"id": id,
 	}

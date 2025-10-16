@@ -45,10 +45,27 @@ func (c *RelationController) GetAllRelationsByFromId(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
 		return
 	}
-	relations, err := c.service.GetAllRelationsByFromId(ctx, int32(parsedInt))
+	relations, err := c.service.GetAllRelationsByFromId(ctx, int64(parsedInt))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"relations": relations})
+}
+
+func (c *RelationController) AcceptRelation(ctx *gin.Context) {
+	fromId := ctx.Param("fromId")
+	toId := ctx.Param("toId")
+	parsedFromId, parsedFromError := strconv.ParseInt(fromId, 10, 32)
+	parsedToId, parsedToError := strconv.ParseInt(toId, 10, 32)
+	if parsedFromError != nil || parsedToError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid fromId or toId"})
+		return
+	}
+	err := c.service.AcceptRelation(ctx, int64(parsedFromId), int64(parsedToId))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "Relation accepted successfully"})
 }

@@ -40,12 +40,12 @@ func (c *ProfileController) CreateProfile(ctx *gin.Context) {
 
 func (c *ProfileController) DeleteProfile(ctx *gin.Context) {
 	id := ctx.Param("id")
-	parsedInt, parsedError := strconv.ParseInt(id, 10, 32)
+	parsedInt, parsedError := strconv.ParseInt(id, 10, 64)
 	if parsedError != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
 		return
 	}
-	err := c.service.DeleteProfile(ctx, int32(parsedInt))
+	err := c.service.DeleteProfile(ctx, int64(parsedInt))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

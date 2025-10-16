@@ -18,6 +18,10 @@ func (s *RelationService) CreateRelation(ctx context.Context, relation entities.
 	return s.repository.CreateRelation(ctx, relation)
 }
 
-func (s *RelationService) GetAllRelationsByFromId(ctx context.Context, fromId int32) ([]entities.Relation, error) {
+func (s *RelationService) GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]entities.Relation, error) {
 	return s.repository.GetAllRelationsByFromId(ctx, fromId)
+}
+
+func (s *RelationService) AcceptRelation(ctx context.Context, fromId int64, toId int64) error {
+	return s.repository.AcceptRelation(ctx, fromId, toId)
 }

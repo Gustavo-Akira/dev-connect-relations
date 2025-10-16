@@ -49,5 +49,6 @@ func main() {
 	router.POST("/profile", profile_controller.CreateProfile)
 	router.GET("/relation/:fromId", rest_relation_controller.GetAllRelationsByFromId)
 	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
+	router.PATCH("/relation/accept/:fromId/:toId", rest_relation_controller.AcceptRelation)
 	router.Run()
 }

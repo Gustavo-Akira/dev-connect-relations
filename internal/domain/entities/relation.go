@@ -18,13 +18,13 @@ const (
 )
 
 type Relation struct {
-	FromID int32
-	ToID   int32
+	FromID int64
+	ToID   int64
 	Type   RelationType
 	Status RelationStatus
 }
 
-func NewRelation(fromID int32, toID int32, relationType RelationType, status RelationStatus) (*Relation, error) {
+func NewRelation(fromID int64, toID int64, relationType RelationType, status RelationStatus) (*Relation, error) {
 	if fromID == toID {
 		return nil, errors.New("cannot create relation with self")
 	}

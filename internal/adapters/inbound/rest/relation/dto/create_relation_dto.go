@@ -1,7 +1,7 @@
 package relation_dto
 
 type CreateRelationDTO struct {
-	FromId       int32
-	TargetId     int32
+	FromId       int64
+	TargetId     int64
 	RelationType string
 }
