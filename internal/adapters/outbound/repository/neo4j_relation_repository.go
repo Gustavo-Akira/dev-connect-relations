@@ -34,7 +34,7 @@ func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, f
 	params := map[string]any{
 		"fromId": fromId,
 	}
-	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId})-[r:Relation]->(toPerson:Profile) RETURN r, toPerson", params, neo4j.EagerResultTransformer)
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId})-[r:Relation]-(toPerson:Profile) RETURN r, toPerson", params, neo4j.EagerResultTransformer)
 	if err != nil {
 		return nil, err
 	}
