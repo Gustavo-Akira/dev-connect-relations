@@ -50,5 +50,6 @@ func main() {
 	router.GET("/relation/:fromId", rest_relation_controller.GetAllRelationsByFromId)
 	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
 	router.PATCH("/relation/accept/:fromId/:toId", rest_relation_controller.AcceptRelation)
+	router.GET("/relation/pending/:fromId", rest_relation_controller.GetAllRelationPendingByFromId)
 	router.Run()
 }

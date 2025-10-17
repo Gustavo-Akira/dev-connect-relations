@@ -25,3 +25,7 @@ func (s *RelationService) GetAllRelationsByFromId(ctx context.Context, fromId in
 func (s *RelationService) AcceptRelation(ctx context.Context, fromId int64, toId int64) error {
 	return s.repository.AcceptRelation(ctx, fromId, toId)
 }
+
+func (s *RelationService) GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]entities.Relation, error) {
+	return s.repository.GetAllRelationPendingByFromId(ctx, fromId)
+}

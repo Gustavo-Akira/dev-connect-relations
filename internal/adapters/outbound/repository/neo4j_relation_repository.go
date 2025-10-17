@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"devconnectrelations/internal/domain/entities"
+	"errors"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -62,9 +63,40 @@ func (r Neo4jRelationRepository) AcceptRelation(ctx context.Context, fromId int6
 		"toId":   toId,
 	}
 
-	_, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId})-[r:Relation]->(toPerson:Profile {id:$toId}) SET r.status = 'ACCEPTED' RETURN r", params, neo4j.EagerResultTransformer)
+	result, err := neo4j.ExecuteQuery(ctx, r.driver,
+		"MATCH (fromPerson:Profile {id: $fromId})-[r:Relation {status: 'PENDING'}]->(toPerson:Profile {id: $toId}) SET r.status = 'ACCEPTED' RETURN r",
+		params, neo4j.EagerResultTransformer)
 	if err != nil {
 		return err
 	}
+	if len(result.Records) == 0 {
+		return errors.New("no pending relation found in the correct direction")
+	}
 	return nil
+}
+
+func (r *Neo4jRelationRepository) GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]entities.Relation, error) {
+	params := map[string]any{
+		"fromId": fromId,
+	}
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile)-[r:Relation {status: 'PENDING'}]->(toPerson:Profile{id: $fromId}) RETURN r, fromPerson", params, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+	relations := make([]entities.Relation, 0)
+	print(result.Records)
+	for _, record := range result.Records {
+		relationNode, _ := record.Get("r")
+		fromPersonNode, _ := record.Get("fromPerson")
+		relationProps := relationNode.(neo4j.Relationship).Props
+		fromPersonProps := fromPersonNode.(neo4j.Node).Props
+		relation := entities.Relation{
+			FromID: fromPersonProps["id"].(int64),
+			ToID:   fromId,
+			Type:   entities.RelationType(relationProps["type"].(string)),
+			Status: entities.RelationStatus(relationProps["status"].(string)),
+		}
+		relations = append(relations, relation)
+	}
+	return relations, nil
 }

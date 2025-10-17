@@ -69,3 +69,18 @@ func (c *RelationController) AcceptRelation(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Relation accepted successfully"})
 }
+
+func (c *RelationController) GetAllRelationPendingByFromId(ctx *gin.Context) {
+	fromId := ctx.Param("fromId")
+	parsedInt, parsedError := strconv.ParseInt(fromId, 10, 64)
+	if parsedError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
+		return
+	}
+	relations, err := c.service.GetAllRelationPendingByFromId(ctx, int64(parsedInt))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"relations": relations})
+}
