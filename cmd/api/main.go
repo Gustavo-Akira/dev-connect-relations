@@ -5,6 +5,7 @@ import (
 	"devconnectrelations/internal/adapters/inbound/consumer"
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
+	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
 	"devconnectrelations/internal/adapters/outbound/repository"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
@@ -25,6 +26,32 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
+func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *service.ProfileService {
+	repo := repository.NewNeo4jProfileRepository(driver)
+	profile_service := service.CreateNewProfileService(repo)
+	profile_controller := rest.CreateNewProfileController(*profile_service)
+	router.POST("/profile", profile_controller.CreateProfile)
+	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
+	return profile_service
+}
+
+func setRelation(router *gin.Engine, driver neo4j.DriverWithContext, profile_service *service.ProfileService) {
+	repo := repository.NewNeo4jRelationRepository(driver)
+	relation_service := service.CreateRelationService(repo)
+	relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
+	router.POST("/relation", relation_controller.CreateRelation)
+	router.GET("/relation/:fromId", relation_controller.GetAllRelationsByFromId)
+	router.PATCH("/relation/accept/:fromId/:toId", relation_controller.AcceptRelation)
+	router.GET("/relation/pending/:fromId", relation_controller.GetAllRelationPendingByFromId)
+}
+
+func setStack(router *gin.Engine, driver neo4j.DriverWithContext) {
+	repo := repository.NewNeo4jStackRepository(driver)
+	stack_service := service.CreateStackService(repo)
+	stack_controller := stack_rest.CreateNewStackController(*stack_service)
+	router.POST("/stack", stack_controller.CreateStack)
+}
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	router := gin.Default()
@@ -42,12 +69,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	repo := repository.NewNeo4jProfileRepository(driver)
-	profile_service := service.CreateNewProfileService(repo)
-	profile_controller := rest.CreateNewProfileController(*profile_service)
-	realtion_repo := repository.NewNeo4jRelationRepository(driver)
-	relation_service := service.CreateRelationService(realtion_repo)
-	rest_relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
+	profile_service := setProfile(router, driver)
+	setRelation(router, driver, profile_service)
+	setStack(router, driver)
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")
@@ -66,11 +90,5 @@ func main() {
 		cancel()
 		os.Exit(0)
 	}()
-	router.POST("/relation", rest_relation_controller.CreateRelation)
-	router.POST("/profile", profile_controller.CreateProfile)
-	router.GET("/relation/:fromId", rest_relation_controller.GetAllRelationsByFromId)
-	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
-	router.PATCH("/relation/accept/:fromId/:toId", rest_relation_controller.AcceptRelation)
-	router.GET("/relation/pending/:fromId", rest_relation_controller.GetAllRelationPendingByFromId)
 	router.Run(":8082")
 }
