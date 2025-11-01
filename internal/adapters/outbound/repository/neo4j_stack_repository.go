@@ -26,3 +26,21 @@ func (r *Neo4jStackRepository) CreateStack(ctx context.Context, stack *entities.
 	println(result.Records)
 	return *stack, nil
 }
+
+func (r *Neo4jStackRepository) GetStackByName(ctx context.Context, name string) (entities.Stack, error) {
+	params := map[string]any{
+		"name": name,
+	}
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (s:Stack {name: $name}) RETURN s.name AS name", params, neo4j.EagerResultTransformer)
+	if err != nil {
+		return entities.Stack{}, err
+	}
+	records := result.Records
+	println(records)
+	if len(records) == 0 {
+		return entities.Stack{}, nil
+	}
+
+	stackName, _ := records[0].Get("name")
+	return entities.Stack{Name: stackName.(string)}, nil
+}
