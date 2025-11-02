@@ -2,6 +2,7 @@ package stack_controller
 
 import (
 	"devconnectrelations/internal/adapters/inbound/rest/stack/dto"
+	"devconnectrelations/internal/domain/entities"
 	"devconnectrelations/internal/domain/service"
 
 	"github.com/gin-gonic/gin"
@@ -28,4 +29,18 @@ func (c *StackController) CreateStack(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(201, gin.H{"stack": stack})
+}
+
+func (c *StackController) GetStackByName(ctx *gin.Context) {
+	name := ctx.Param("name")
+	stack, err := c.service.GetStackByName(ctx, name)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	if stack == (entities.Stack{}) {
+		ctx.JSON(404, gin.H{"error": "stack not found"})
+		return
+	}
+	ctx.JSON(200, gin.H{"stack": stack})
 }

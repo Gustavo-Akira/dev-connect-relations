@@ -30,3 +30,7 @@ func (s *StackService) CreateStack(ctx context.Context, stackName string) (entit
 	savedStack, saveError := s.repository.CreateStack(ctx, stack)
 	return savedStack, saveError
 }
+
+func (s *StackService) GetStackByName(ctx context.Context, name string) (entities.Stack, error) {
+	return s.repository.GetStackByName(ctx, name)
+}
