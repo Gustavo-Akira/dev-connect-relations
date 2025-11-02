@@ -51,6 +51,7 @@ func setStack(router *gin.Engine, driver neo4j.DriverWithContext) {
 	stack_controller := stack_rest.CreateNewStackController(*stack_service)
 	router.POST("/stack", stack_controller.CreateStack)
 	router.GET("/stack/:name", stack_controller.GetStackByName)
+	router.DELETE("/stack/:name", stack_controller.DeleteStack)
 }
 
 func main() {

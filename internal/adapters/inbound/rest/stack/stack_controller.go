@@ -44,3 +44,13 @@ func (c *StackController) GetStackByName(ctx *gin.Context) {
 	}
 	ctx.JSON(200, gin.H{"stack": stack})
 }
+
+func (c *StackController) DeleteStack(ctx *gin.Context) {
+	name := ctx.Param("name")
+	err := c.service.DeleteStack(ctx, name)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(200, gin.H{"message": "stack deleted"})
+}

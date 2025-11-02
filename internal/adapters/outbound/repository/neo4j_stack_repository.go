@@ -44,3 +44,11 @@ func (r *Neo4jStackRepository) GetStackByName(ctx context.Context, name string) 
 	stackName, _ := records[0].Get("name")
 	return entities.Stack{Name: stackName.(string)}, nil
 }
+
+func (r *Neo4jStackRepository) DeleteStack(ctx context.Context, name string) error {
+	params := map[string]any{
+		"name": name,
+	}
+	_, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (s:Stack {name: $name}) DETACH DELETE s", params, neo4j.EagerResultTransformer)
+	return err
+}
