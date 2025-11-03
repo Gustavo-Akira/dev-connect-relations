@@ -1,7 +1,10 @@
 package repository
 
-import "devconnectrelations/internal/domain/entities"
+import (
+	"context"
+	"devconnectrelations/internal/domain/entities"
+)
 
 type StackRelationRepository interface {
-	CreateStackRelation(stackRelation *entities.StackRelation) (*entities.StackRelation, error)
+	CreateStackRelation(ctx context.Context, stackRelation *entities.StackRelation) (*entities.StackRelation, error)
 }

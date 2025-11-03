@@ -6,6 +6,7 @@ import (
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
 	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
+	stack_relation_rest "devconnectrelations/internal/adapters/inbound/rest/stack_relation"
 	"devconnectrelations/internal/adapters/outbound/repository"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
@@ -54,6 +55,13 @@ func setStack(router *gin.Engine, driver neo4j.DriverWithContext) {
 	router.DELETE("/stack/:name", stack_controller.DeleteStack)
 }
 
+func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
+	repo := repository.NewNeo4jStackRelationRepository(driver)
+	stack_relation_service := service.CreateStackRelationService(repo)
+	stack_relation_controller := stack_relation_rest.CreateNewStackRelationController(stack_relation_service)
+	router.POST("/stack-relation", stack_relation_controller.CreateStackRelation)
+}
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	router := gin.Default()
@@ -74,6 +82,7 @@ func main() {
 	profile_service := setProfile(router, driver)
 	setRelation(router, driver, profile_service)
 	setStack(router, driver)
+	setStackRelation(router, driver)
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")
