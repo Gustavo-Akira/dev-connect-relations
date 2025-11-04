@@ -52,3 +52,22 @@ func (c *ProfileController) DeleteProfile(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusNoContent, gin.H{})
 }
+
+func (c *ProfileController) GetProfileByID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	parsedInt, parsedError := strconv.ParseInt(id, 10, 64)
+	if parsedError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
+		return
+	}
+	profile, err := c.service.GetProfileByID(ctx, int64(parsedInt))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if profile == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Profile not found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"profile": profile})
+}

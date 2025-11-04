@@ -26,6 +26,11 @@ func (m *MockProfileRepository) DeleteProfile(ctx context.Context, id int64) err
 	return args.Error(0)
 }
 
+func (m *MockProfileRepository) GetProfileByID(ctx context.Context, profileId int64) (*entities.Profile, error) {
+	args := m.Called(ctx, profileId)
+	return args.Get(0).(*entities.Profile), args.Error(1)
+}
+
 func TestProfileService_CreateProfile(t *testing.T) {
 	ctx := context.Background()
 

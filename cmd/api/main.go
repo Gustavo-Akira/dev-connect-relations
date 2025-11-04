@@ -33,6 +33,7 @@ func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *service.Pro
 	profile_controller := rest.CreateNewProfileController(*profile_service)
 	router.POST("/profile", profile_controller.CreateProfile)
 	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
+	router.GET("/profile/:id", profile_controller.GetProfileByID)
 	return profile_service
 }
 

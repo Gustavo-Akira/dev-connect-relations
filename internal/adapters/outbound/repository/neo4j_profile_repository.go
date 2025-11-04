@@ -35,3 +35,21 @@ func (r *Neo4jProfileRepository) DeleteProfile(ctx context.Context, id int64) er
 	_, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (p:Profile {id: $id}) DELETE p;", params, neo4j.EagerResultTransformer)
 	return err
 }
+
+func (r *Neo4jProfileRepository) GetProfileByID(ctx context.Context, profileId int64) (*entities.Profile, error) {
+	params := map[string]any{
+		"id": profileId,
+	}
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (p:Profile {id: $id}) RETURN p.id AS id, p.name AS name", params, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+	records := result.Records
+	if len(records) == 0 {
+		return nil, nil
+	}
+	record := records[0]
+	id, _ := record.Get("id")
+	name, _ := record.Get("name")
+	return entities.NewProfile(id.(int64), name.(string))
+}

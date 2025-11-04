@@ -25,3 +25,7 @@ func (s *ProfileService) DeleteProfile(ctx context.Context, id int64) error {
 	}
 	return s.repository.DeleteProfile(ctx, id)
 }
+
+func (s *ProfileService) GetProfileByID(ctx context.Context, profileId int64) (*entities.Profile, error) {
+	return s.repository.GetProfileByID(ctx, profileId)
+}
