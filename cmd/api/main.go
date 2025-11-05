@@ -61,6 +61,7 @@ func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
 	stack_relation_service := service.CreateStackRelationService(repo)
 	stack_relation_controller := stack_relation_rest.CreateNewStackRelationController(stack_relation_service)
 	router.POST("/stack-relation", stack_relation_controller.CreateStackRelation)
+	router.DELETE("/stack-relation", stack_relation_controller.DeleteStackRelation)
 }
 
 func main() {

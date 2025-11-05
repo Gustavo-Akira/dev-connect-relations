@@ -29,3 +29,14 @@ func (r *Neo4JStackRelationRepository) CreateStackRelation(ctx context.Context, 
 	}
 	return stackRelation, nil
 }
+
+func (r *Neo4JStackRelationRepository) DeleteStackRelation(ctx context.Context, stackName string, profileID int64) error {
+	params := map[string]any{
+		"stackName": stackName,
+		"profileID": profileID,
+	}
+	_, err := neo4j.ExecuteQuery(ctx, r.driver,
+		`MATCH (p:Profile {id: $profileID})-[r:USES]->(s:Stack {name: $stackName})
+		 DELETE r`, params, neo4j.EagerResultTransformer)
+	return err
+}

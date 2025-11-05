@@ -22,3 +22,7 @@ func (s *StackRelationService) CreateStackRelation(ctx context.Context, stackNam
 	savedStackRelation, saveError := s.repository.CreateStackRelation(ctx, stackRelation)
 	return savedStackRelation, saveError
 }
+
+func (s *StackRelationService) DeleteStackRelation(ctx context.Context, stackName string, profileID int64) error {
+	return s.repository.DeleteStackRelation(ctx, stackName, profileID)
+}
