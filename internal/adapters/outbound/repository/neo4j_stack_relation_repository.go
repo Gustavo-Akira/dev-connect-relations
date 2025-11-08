@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"devconnectrelations/internal/domain/entities"
+	"fmt"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -20,10 +21,13 @@ func (r *Neo4JStackRelationRepository) CreateStackRelation(ctx context.Context, 
 		"stackName": stackRelation.StackName,
 		"profileID": stackRelation.ProfileID,
 	}
-	_, err := neo4j.ExecuteQuery(ctx, r.driver,
+	// retornamos a relação criada para validar
+	st, err := neo4j.ExecuteQuery(ctx, r.driver,
 		`MATCH (s:Stack {name: $stackName}), (p:Profile {id: $profileID})
-		 Merge (p)-[:USES]->(s)`, params, neo4j.EagerResultTransformer)
-
+         MERGE (p)-[r:USES]->(s)
+         RETURN r, p, s`, params, neo4j.EagerResultTransformer)
+	fmt.Println("CreateStackRelation cypher params:", params)
+	fmt.Println("CreateStackRelation result:", st)
 	if err != nil {
 		return nil, err
 	}

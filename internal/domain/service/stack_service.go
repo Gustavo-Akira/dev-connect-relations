@@ -32,7 +32,11 @@ func (s *StackService) CreateStack(ctx context.Context, stackName string) (entit
 }
 
 func (s *StackService) GetStackByName(ctx context.Context, name string) (entities.Stack, error) {
-	return s.repository.GetStackByName(ctx, name)
+	stack, err := entities.NewStack(name)
+	if err != nil {
+		return entities.Stack{}, err
+	}
+	return s.repository.GetStackByName(ctx, stack.Name)
 }
 
 func (s *StackService) DeleteStack(ctx context.Context, name string) error {

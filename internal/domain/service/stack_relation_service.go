@@ -4,6 +4,7 @@ import (
 	"context"
 	"devconnectrelations/internal/domain/entities"
 	"devconnectrelations/internal/domain/ports/outbound/repository"
+	"fmt"
 )
 
 type StackRelationService struct {
@@ -19,6 +20,7 @@ func (s *StackRelationService) CreateStackRelation(ctx context.Context, stackNam
 	if stackRelationError != nil {
 		return nil, stackRelationError
 	}
+	fmt.Println("Creating stack relation:", stackRelation)
 	savedStackRelation, saveError := s.repository.CreateStackRelation(ctx, stackRelation)
 	return savedStackRelation, saveError
 }

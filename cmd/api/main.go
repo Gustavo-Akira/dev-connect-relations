@@ -47,21 +47,23 @@ func setRelation(router *gin.Engine, driver neo4j.DriverWithContext, profile_ser
 	router.GET("/relation/pending/:fromId", relation_controller.GetAllRelationPendingByFromId)
 }
 
-func setStack(router *gin.Engine, driver neo4j.DriverWithContext) {
+func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *service.StackService {
 	repo := repository.NewNeo4jStackRepository(driver)
 	stack_service := service.CreateStackService(repo)
 	stack_controller := stack_rest.CreateNewStackController(*stack_service)
 	router.POST("/stack", stack_controller.CreateStack)
 	router.GET("/stack/:name", stack_controller.GetStackByName)
 	router.DELETE("/stack/:name", stack_controller.DeleteStack)
+	return stack_service
 }
 
-func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
+func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *service.StackRelationService {
 	repo := repository.NewNeo4jStackRelationRepository(driver)
 	stack_relation_service := service.CreateStackRelationService(repo)
 	stack_relation_controller := stack_relation_rest.CreateNewStackRelationController(stack_relation_service)
 	router.POST("/stack-relation", stack_relation_controller.CreateStackRelation)
 	router.DELETE("/stack-relation", stack_relation_controller.DeleteStackRelation)
+	return stack_relation_service
 }
 
 func main() {
@@ -83,12 +85,12 @@ func main() {
 	}
 	profile_service := setProfile(router, driver)
 	setRelation(router, driver, profile_service)
-	setStack(router, driver)
-	setStackRelation(router, driver)
+	stackService := setStack(router, driver)
+	stackRelationService := setStackRelation(router, driver)
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")
-	consumer := consumer.NewKafkaProfileCreatedConsumer(kafka_brokers, kafka_profile_create_topic, kafka_group_id, profile_service)
+	consumer := consumer.NewKafkaProfileCreatedConsumer(kafka_brokers, kafka_profile_create_topic, kafka_group_id, profile_service, stackService, stackRelationService)
 	go func() {
 		if err := consumer.Consume(ctx); err != nil {
 			fmt.Println("kafka consumer error:", err)
