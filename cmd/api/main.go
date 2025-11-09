@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"devconnectrelations/internal/adapters/inbound/consumer"
+	city_rest "devconnectrelations/internal/adapters/inbound/rest/city"
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
 	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
@@ -66,6 +67,14 @@ func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *servi
 	return stack_relation_service
 }
 
+func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *service.CityService {
+	repo := repository.NewNeo4jCityRepository(driver)
+	city_service := service.NewCityService(repo)
+	city_controller := city_rest.CreateNewCityController(*city_service)
+	router.POST("/city", city_controller.CreateCity)
+	return city_service
+}
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	router := gin.Default()
@@ -87,6 +96,7 @@ func main() {
 	setRelation(router, driver, profile_service)
 	stackService := setStack(router, driver)
 	stackRelationService := setStackRelation(router, driver)
+	setCity(router, driver)
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")
