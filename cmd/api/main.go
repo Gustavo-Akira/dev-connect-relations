@@ -4,6 +4,7 @@ import (
 	"context"
 	"devconnectrelations/internal/adapters/inbound/consumer"
 	city_rest "devconnectrelations/internal/adapters/inbound/rest/city"
+	cityrelation "devconnectrelations/internal/adapters/inbound/rest/city_relation"
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
 	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
@@ -72,7 +73,16 @@ func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *service.CitySe
 	city_service := service.NewCityService(repo)
 	city_controller := city_rest.CreateNewCityController(*city_service)
 	router.POST("/city", city_controller.CreateCity)
+	router.GET("/city/:fullName", city_controller.GetCityByFullName)
 	return city_service
+}
+
+func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *service.CityService) *service.CityRelationService {
+	repo := repository.NewNeo4jRelationCityRepository(&driver)
+	city_relation_service := service.CreateNewCityRelationService(repo, cityService)
+	city_relation_controller := cityrelation.CreateNewCityRelationController(*city_relation_service)
+	router.POST("/city-relation", city_relation_controller.CreateCityRelation)
+	return city_relation_service
 }
 
 func main() {
@@ -96,7 +106,8 @@ func main() {
 	setRelation(router, driver, profile_service)
 	stackService := setStack(router, driver)
 	stackRelationService := setStackRelation(router, driver)
-	setCity(router, driver)
+	cityService := setCity(router, driver)
+	setCityRelation(router, driver, cityService)
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")

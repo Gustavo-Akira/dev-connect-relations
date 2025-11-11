@@ -17,3 +17,7 @@ func NewCityService(cityRepo repository.CityRepository) *CityService {
 func (s *CityService) CreateCity(ctx context.Context, city entities.City) (entities.City, error) {
 	return s.cityRepo.CreateCity(ctx, city)
 }
+
+func (s *CityService) GetCityByFullName(ctx context.Context, fullName string) (*entities.City, error) {
+	return s.cityRepo.GetCityByFullName(ctx, fullName)
+}

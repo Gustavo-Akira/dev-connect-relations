@@ -16,6 +16,14 @@ func (m *MockCityRepository) CreateCity(ctx context.Context, city entities.City)
 	return city, nil
 }
 
+func (m *MockCityRepository) GetCityByFullName(ctx context.Context, fullName string) (*entities.City, error) {
+	return &entities.City{
+		Name:    "MockCity",
+		State:   "MC",
+		Country: "MockCountry",
+	}, nil
+}
+
 func TestCityService_CreateCity(t *testing.T) {
 	mockRepo := &MockCityRepository{}
 	cityService := NewCityService(mockRepo)

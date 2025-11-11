@@ -24,5 +24,5 @@ func normalizeString(s string) string {
 }
 
 func (c *City) GetFullName() string {
-	return c.Name + ", " + c.State + ", " + c.Country
+	return c.Name + "," + c.State + "," + c.Country
 }

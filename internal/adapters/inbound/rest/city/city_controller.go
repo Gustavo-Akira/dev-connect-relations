@@ -33,3 +33,13 @@ func (cc *CityController) CreateCity(ctx *gin.Context) {
 
 	ctx.JSON(201, gin.H{"city": city})
 }
+
+func (cc CityController) GetCityByFullName(ctx *gin.Context) {
+	fullName := ctx.Param("fullName")
+	city, err := cc.cityService.GetCityByFullName(ctx, fullName)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(200, city)
+}
