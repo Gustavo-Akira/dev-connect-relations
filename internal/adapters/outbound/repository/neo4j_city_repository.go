@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"devconnectrelations/internal/domain/entities"
+	"errors"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -40,7 +41,7 @@ func (r *Neo4jCityRepository) GetCityByFullName(ctx context.Context, fullName st
 	}
 	records := result.Records
 	if len(records) == 0 {
-		return nil, nil
+		return nil, errors.New("city not found")
 	}
 
 	node := records[0].Values[0].(neo4j.Node)
