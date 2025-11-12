@@ -4,6 +4,7 @@ import (
 	"devconnectrelations/internal/adapters/inbound/rest/city/dto"
 	"devconnectrelations/internal/domain/entities"
 	"devconnectrelations/internal/domain/service"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -38,6 +39,10 @@ func (cc CityController) GetCityByFullName(ctx *gin.Context) {
 	fullName := ctx.Param("fullName")
 	city, err := cc.cityService.GetCityByFullName(ctx, fullName)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.JSON(404, gin.H{"error": err.Error()})
+			return
+		}
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
