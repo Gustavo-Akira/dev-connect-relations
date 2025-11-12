@@ -19,9 +19,10 @@ func CreateNewCityRelationService(cityRelationRepo repository.CityRelationReposi
 }
 
 func (crs *CityRelationService) CreateCityRelation(ctx context.Context, cityRelation *entities.CityRelation) (*entities.CityRelation, error) {
-	_, err := crs.cityService.GetCityByFullName(ctx, cityRelation.CityFullName)
+	city, err := crs.cityService.GetCityByFullName(ctx, cityRelation.CityFullName)
 	if err != nil {
 		return nil, err
 	}
+	cityRelation.CityFullName = city.GetFullName()
 	return crs.cityRelationRepo.CreateCityRelation(ctx, cityRelation)
 }
