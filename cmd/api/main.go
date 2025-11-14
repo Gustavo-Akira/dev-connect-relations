@@ -107,11 +107,11 @@ func main() {
 	stackService := setStack(router, driver)
 	stackRelationService := setStackRelation(router, driver)
 	cityService := setCity(router, driver)
-	setCityRelation(router, driver, cityService)
+	cityRelationService := setCityRelation(router, driver, cityService)
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")
-	consumer := consumer.NewKafkaProfileCreatedConsumer(kafka_brokers, kafka_profile_create_topic, kafka_group_id, profile_service, stackService, stackRelationService)
+	consumer := consumer.NewKafkaProfileCreatedConsumer(kafka_brokers, kafka_profile_create_topic, kafka_group_id, profile_service, stackService, stackRelationService, cityService, cityRelationService)
 	go func() {
 		if err := consumer.Consume(ctx); err != nil {
 			fmt.Println("kafka consumer error:", err)

@@ -6,6 +6,7 @@ import (
 	"devconnectrelations/internal/domain/service"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -15,9 +16,11 @@ type KafkaProfileCreatedConsumer struct {
 	service              *service.ProfileService
 	stackService         *service.StackService
 	stackRelationService *service.StackRelationService
+	cityRelationService  *service.CityRelationService
+	cityService          *service.CityService
 }
 
-func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *service.ProfileService, stackService *service.StackService, stackRelationService *service.StackRelationService) *KafkaProfileCreatedConsumer {
+func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *service.ProfileService, stackService *service.StackService, stackRelationService *service.StackRelationService, cityService *service.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: brokers,
 		Topic:   topic,
@@ -28,6 +31,8 @@ func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, ser
 		service:              service,
 		stackService:         stackService,
 		stackRelationService: stackRelationService,
+		cityService:          cityService,
+		cityRelationService:  cityRelationService,
 	}
 }
 
@@ -76,13 +81,20 @@ func (c *KafkaProfileCreatedConsumer) Consume(ctx context.Context) error {
 				continue
 			}
 		}
+		city := *entities.NewCity(createdEvent.City, createdEvent.Country, createdEvent.State)
+		_, existCityError := c.cityService.GetCityByFullName(ctx, city.GetFullName())
+		if existCityError != nil {
+			if strings.Contains(existCityError.Error(), "not found") {
+				c.cityService.CreateCity(ctx, city)
+			}
+		}
+		c.cityRelationService.CreateCityRelation(ctx, entities.NewCityRelation(city.GetFullName(), profile.ConnectId))
 		fmt.Println("✅ Perfil criado no Neo4j com sucesso! ID:", profile.ConnectId)
 		for _, stack := range stacks {
 			fmt.Println("✅ Stack criada no Neo4j com sucesso! Nome:", stack.Name)
 			fmt.Printf("✅ Relação entre Profile ID %d e Stack %s criada com sucesso!\n", profile.ConnectId, stack.Name)
 		}
 
-		return nil
 	}
 
 }
