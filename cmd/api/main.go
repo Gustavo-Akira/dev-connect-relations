@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"devconnectrelations/internal/adapters/inbound/consumer"
+	"devconnectrelations/internal/adapters/inbound/consumer/profile_created"
 	city_rest "devconnectrelations/internal/adapters/inbound/rest/city"
 	cityrelation "devconnectrelations/internal/adapters/inbound/rest/city_relation"
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
@@ -111,7 +111,7 @@ func main() {
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")
-	consumer := consumer.NewKafkaProfileCreatedConsumer(kafka_brokers, kafka_profile_create_topic, kafka_group_id, profile_service, stackService, stackRelationService, cityService, cityRelationService)
+	consumer := profile_created.NewKafkaProfileCreatedConsumer(kafka_brokers, kafka_profile_create_topic, kafka_group_id, profile_service, stackService, stackRelationService, cityService, cityRelationService)
 	go func() {
 		if err := consumer.Consume(ctx); err != nil {
 			fmt.Println("kafka consumer error:", err)

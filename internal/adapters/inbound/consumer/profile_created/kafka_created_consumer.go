@@ -1,4 +1,4 @@
-package consumer
+package profile_created
 
 import (
 	"context"

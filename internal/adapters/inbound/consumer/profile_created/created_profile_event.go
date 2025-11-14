@@ -1,4 +1,4 @@
-package consumer
+package profile_created
 
 type CreatedProfileEvent struct {
 	Id      int64
