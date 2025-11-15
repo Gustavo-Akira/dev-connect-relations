@@ -1,4 +1,4 @@
-package entities
+package relation
 
 import "testing"
 

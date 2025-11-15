@@ -2,7 +2,7 @@ package relation
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
+	"devconnectrelations/internal/domain/profile_relation/stack"
 	"fmt"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -16,7 +16,7 @@ func NewNeo4jStackRelationRepository(driver neo4j.DriverWithContext) *Neo4JStack
 	return &Neo4JStackRelationRepository{driver: driver}
 }
 
-func (r *Neo4JStackRelationRepository) CreateStackRelation(ctx context.Context, stackRelation *entities.StackRelation) (*entities.StackRelation, error) {
+func (r *Neo4JStackRelationRepository) CreateStackRelation(ctx context.Context, stackRelation *stack.StackRelation) (*stack.StackRelation, error) {
 	params := map[string]any{
 		"stackName": stackRelation.StackName,
 		"profileID": stackRelation.ProfileID,

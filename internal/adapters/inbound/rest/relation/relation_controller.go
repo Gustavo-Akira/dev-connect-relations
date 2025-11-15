@@ -2,8 +2,8 @@ package relation_controller
 
 import (
 	relation_dto "devconnectrelations/internal/adapters/inbound/rest/relation/dto"
-	"devconnectrelations/internal/domain/entities"
-	"devconnectrelations/internal/domain/service"
+	"devconnectrelations/internal/domain/profile_relation/relation"
+
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,10 +12,10 @@ import (
 )
 
 type RelationController struct {
-	service *service.RelationService
+	service *relation.RelationService
 }
 
-func CreateNewRelationsController(service service.RelationService) *RelationController {
+func CreateNewRelationsController(service relation.RelationService) *RelationController {
 	return &RelationController{service: &service}
 }
 
@@ -25,7 +25,7 @@ func (c *RelationController) CreateRelation(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	relation, formatError := entities.NewRelation(createDTO.FromId, createDTO.TargetId, entities.RelationType(strings.ToUpper(createDTO.RelationType)), entities.RelationStatusPending)
+	relation, formatError := relation.NewRelation(createDTO.FromId, createDTO.TargetId, relation.RelationType(strings.ToUpper(createDTO.RelationType)), relation.RelationStatusPending)
 	if formatError != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": formatError.Error()})
 		return

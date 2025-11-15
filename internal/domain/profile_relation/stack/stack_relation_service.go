@@ -1,22 +1,20 @@
-package service
+package stack
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
-	"devconnectrelations/internal/domain/ports/outbound/repository"
 	"fmt"
 )
 
 type StackRelationService struct {
-	repository repository.StackRelationRepository
+	repository StackRelationRepository
 }
 
-func CreateStackRelationService(repo repository.StackRelationRepository) *StackRelationService {
+func CreateStackRelationService(repo StackRelationRepository) *StackRelationService {
 	return &StackRelationService{repository: repo}
 }
 
-func (s *StackRelationService) CreateStackRelation(ctx context.Context, stackName string, profileID int64) (*entities.StackRelation, error) {
-	stackRelation, stackRelationError := entities.NewStackRelation(stackName, profileID)
+func (s *StackRelationService) CreateStackRelation(ctx context.Context, stackName string, profileID int64) (*StackRelation, error) {
+	stackRelation, stackRelationError := NewStackRelation(stackName, profileID)
 	if stackRelationError != nil {
 		return nil, stackRelationError
 	}

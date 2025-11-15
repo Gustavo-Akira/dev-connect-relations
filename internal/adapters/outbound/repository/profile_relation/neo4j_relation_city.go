@@ -2,7 +2,7 @@ package relation
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
+	"devconnectrelations/internal/domain/profile_relation/city"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -17,7 +17,7 @@ func NewNeo4jRelationCityRepository(driver *neo4j.DriverWithContext) *Neo4jRelat
 	}
 }
 
-func (r *Neo4jRelationCityRepository) CreateCityRelation(ctx context.Context, city *entities.CityRelation) (*entities.CityRelation, error) {
+func (r *Neo4jRelationCityRepository) CreateCityRelation(ctx context.Context, city *city.CityRelation) (*city.CityRelation, error) {
 	_, err := neo4j.ExecuteQuery(ctx, *r.driver, `MATCH (c:City {full_name: $cityFullName}),(p:Profile {id: $profileID})
 	MERGE (p)-[:LIVES_IN]->(c)`, map[string]any{
 		"cityFullName": city.CityFullName,

@@ -15,7 +15,9 @@ import (
 	stackRepository "devconnectrelations/internal/adapters/outbound/repository/stack"
 	"devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/domain/profile"
-	"devconnectrelations/internal/domain/service"
+	cityRelationDomain "devconnectrelations/internal/domain/profile_relation/city"
+	"devconnectrelations/internal/domain/profile_relation/relation"
+	stackRelationDomain "devconnectrelations/internal/domain/profile_relation/stack"
 	"devconnectrelations/internal/domain/stack"
 	"fmt"
 	"os"
@@ -47,7 +49,7 @@ func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *profile.Pro
 
 func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
 	repo := relationRepository.NewNeo4jRelationRepository(driver)
-	relation_service := service.CreateRelationService(repo)
+	relation_service := relation.CreateRelationService(repo)
 	relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
 	router.POST("/relation", relation_controller.CreateRelation)
 	router.GET("/relation/:fromId", relation_controller.GetAllRelationsByFromId)
@@ -65,9 +67,9 @@ func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *stack.StackSe
 	return stack_service
 }
 
-func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *service.StackRelationService {
+func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *stackRelationDomain.StackRelationService {
 	repo := relationRepository.NewNeo4jStackRelationRepository(driver)
-	stack_relation_service := service.CreateStackRelationService(repo)
+	stack_relation_service := stackRelationDomain.CreateStackRelationService(repo)
 	stack_relation_controller := stack_relation_rest.CreateNewStackRelationController(stack_relation_service)
 	router.POST("/stack-relation", stack_relation_controller.CreateStackRelation)
 	router.DELETE("/stack-relation", stack_relation_controller.DeleteStackRelation)
@@ -83,9 +85,9 @@ func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *city.CityServi
 	return city_service
 }
 
-func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *city.CityService) *service.CityRelationService {
+func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *city.CityService) *cityRelationDomain.CityRelationService {
 	repo := relationRepository.NewNeo4jRelationCityRepository(&driver)
-	city_relation_service := service.CreateNewCityRelationService(repo, cityService)
+	city_relation_service := cityRelationDomain.CreateNewCityRelationService(repo, cityService)
 	city_relation_controller := cityrelation.CreateNewCityRelationController(*city_relation_service)
 	router.POST("/city-relation", city_relation_controller.CreateCityRelation)
 	return city_relation_service

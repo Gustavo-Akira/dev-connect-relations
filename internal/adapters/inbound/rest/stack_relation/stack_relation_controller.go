@@ -3,16 +3,16 @@ package stackrelation
 import (
 	"context"
 	"devconnectrelations/internal/adapters/inbound/rest/stack_relation/dto"
-	"devconnectrelations/internal/domain/service"
+	"devconnectrelations/internal/domain/profile_relation/stack"
 
 	"github.com/gin-gonic/gin"
 )
 
 type StackRelationController struct {
-	service *service.StackRelationService
+	service *stack.StackRelationService
 }
 
-func CreateNewStackRelationController(svc *service.StackRelationService) *StackRelationController {
+func CreateNewStackRelationController(svc *stack.StackRelationService) *StackRelationController {
 	return &StackRelationController{service: svc}
 }
 

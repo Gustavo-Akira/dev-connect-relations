@@ -1,4 +1,4 @@
-package entities
+package city
 
 type CityRelation struct {
 	CityFullName string

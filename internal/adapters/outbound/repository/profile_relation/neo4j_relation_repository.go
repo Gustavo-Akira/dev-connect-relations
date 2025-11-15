@@ -2,7 +2,7 @@ package relation
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
+	domain "devconnectrelations/internal/domain/profile_relation/relation"
 	"errors"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -16,7 +16,7 @@ func NewNeo4jRelationRepository(driver neo4j.DriverWithContext) *Neo4jRelationRe
 	return &Neo4jRelationRepository{driver: driver}
 }
 
-func (r *Neo4jRelationRepository) CreateRelation(ctx context.Context, relation entities.Relation) (entities.Relation, error) {
+func (r *Neo4jRelationRepository) CreateRelation(ctx context.Context, relation domain.Relation) (domain.Relation, error) {
 	params := map[string]any{
 		"fromId":   relation.FromID,
 		"targetId": relation.ToID,
@@ -25,13 +25,13 @@ func (r *Neo4jRelationRepository) CreateRelation(ctx context.Context, relation e
 	}
 	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId}), (toPerson:Profile {id:$targetId}) MERGE (fromPerson)-[r:Relation{type:$type, status:$status}]->(toPerson) RETURN fromPerson", params, neo4j.EagerResultTransformer)
 	if err != nil {
-		return entities.Relation{}, err
+		return domain.Relation{}, err
 	}
 	println(result.Records)
 	return relation, nil
 }
 
-func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]entities.Relation, error) {
+func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]domain.Relation, error) {
 	params := map[string]any{
 		"fromId": fromId,
 	}
@@ -39,18 +39,18 @@ func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, f
 	if err != nil {
 		return nil, err
 	}
-	relations := make([]entities.Relation, 0)
+	relations := make([]domain.Relation, 0)
 	print(result.Records)
 	for _, record := range result.Records {
 		relationNode, _ := record.Get("r")
 		toPersonNode, _ := record.Get("toPerson")
 		relationProps := relationNode.(neo4j.Relationship).Props
 		toPersonProps := toPersonNode.(neo4j.Node).Props
-		relation := entities.Relation{
+		relation := domain.Relation{
 			FromID: fromId,
 			ToID:   toPersonProps["id"].(int64),
-			Type:   entities.RelationType(relationProps["type"].(string)),
-			Status: entities.RelationStatus(relationProps["status"].(string)),
+			Type:   domain.RelationType(relationProps["type"].(string)),
+			Status: domain.RelationStatus(relationProps["status"].(string)),
 		}
 		relations = append(relations, relation)
 	}
@@ -75,7 +75,7 @@ func (r Neo4jRelationRepository) AcceptRelation(ctx context.Context, fromId int6
 	return nil
 }
 
-func (r *Neo4jRelationRepository) GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]entities.Relation, error) {
+func (r *Neo4jRelationRepository) GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]domain.Relation, error) {
 	params := map[string]any{
 		"fromId": fromId,
 	}
@@ -83,18 +83,18 @@ func (r *Neo4jRelationRepository) GetAllRelationPendingByFromId(ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-	relations := make([]entities.Relation, 0)
+	relations := make([]domain.Relation, 0)
 	print(result.Records)
 	for _, record := range result.Records {
 		relationNode, _ := record.Get("r")
 		fromPersonNode, _ := record.Get("fromPerson")
 		relationProps := relationNode.(neo4j.Relationship).Props
 		fromPersonProps := fromPersonNode.(neo4j.Node).Props
-		relation := entities.Relation{
+		relation := domain.Relation{
 			FromID: fromPersonProps["id"].(int64),
 			ToID:   fromId,
-			Type:   entities.RelationType(relationProps["type"].(string)),
-			Status: entities.RelationStatus(relationProps["status"].(string)),
+			Type:   domain.RelationType(relationProps["type"].(string)),
+			Status: domain.RelationStatus(relationProps["status"].(string)),
 		}
 		relations = append(relations, relation)
 	}

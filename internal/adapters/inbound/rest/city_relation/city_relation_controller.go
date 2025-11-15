@@ -2,24 +2,23 @@ package cityrelation
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
-	"devconnectrelations/internal/domain/service"
+	"devconnectrelations/internal/domain/profile_relation/city"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CityRelationController struct {
-	cityRelationService service.CityRelationService
+	cityRelationService city.CityRelationService
 }
 
-func CreateNewCityRelationController(cityRelationService service.CityRelationService) *CityRelationController {
+func CreateNewCityRelationController(cityRelationService city.CityRelationService) *CityRelationController {
 	return &CityRelationController{
 		cityRelationService: cityRelationService,
 	}
 }
 
 func (crc *CityRelationController) CreateCityRelation(ctx *gin.Context) {
-	var cityRelation entities.CityRelation
+	var cityRelation city.CityRelation
 	if err := ctx.ShouldBindJSON(&cityRelation); err != nil {
 		ctx.JSON(400, gin.H{"error": err.Error()})
 		return

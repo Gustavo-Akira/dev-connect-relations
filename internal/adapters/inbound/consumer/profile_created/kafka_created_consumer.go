@@ -3,9 +3,9 @@ package profile_created
 import (
 	"context"
 	"devconnectrelations/internal/domain/city"
-	"devconnectrelations/internal/domain/entities"
 	profileDomain "devconnectrelations/internal/domain/profile"
-	"devconnectrelations/internal/domain/service"
+	cityRelationDomain "devconnectrelations/internal/domain/profile_relation/city"
+	stackRelationDomain "devconnectrelations/internal/domain/profile_relation/stack"
 	stackDomain "devconnectrelations/internal/domain/stack"
 	"encoding/json"
 	"fmt"
@@ -18,12 +18,12 @@ type KafkaProfileCreatedConsumer struct {
 	reader               *kafka.Reader
 	service              *profileDomain.ProfileService
 	stackService         *stackDomain.StackService
-	stackRelationService *service.StackRelationService
-	cityRelationService  *service.CityRelationService
+	stackRelationService *stackRelationDomain.StackRelationService
+	cityRelationService  *cityRelationDomain.CityRelationService
 	cityService          *city.CityService
 }
 
-func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *profileDomain.ProfileService, stackService *stackDomain.StackService, stackRelationService *service.StackRelationService, cityService *city.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
+func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *profileDomain.ProfileService, stackService *stackDomain.StackService, stackRelationService *stackRelationDomain.StackRelationService, cityService *city.CityService, cityRelationService *cityRelationDomain.CityRelationService) *KafkaProfileCreatedConsumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: brokers,
 		Topic:   topic,
@@ -91,7 +91,7 @@ func (c *KafkaProfileCreatedConsumer) Consume(ctx context.Context) error {
 				c.cityService.CreateCity(ctx, city)
 			}
 		}
-		c.cityRelationService.CreateCityRelation(ctx, entities.NewCityRelation(city.GetFullName(), profile.ConnectId))
+		c.cityRelationService.CreateCityRelation(ctx, cityRelationDomain.NewCityRelation(city.GetFullName(), profile.ConnectId))
 		fmt.Println("✅ Perfil criado no Neo4j com sucesso! ID:", profile.ConnectId)
 		for _, stack := range stacks {
 			fmt.Println("✅ Stack criada no Neo4j com sucesso! Nome:", stack.Name)
