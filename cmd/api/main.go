@@ -14,6 +14,7 @@ import (
 	relationRepository "devconnectrelations/internal/adapters/outbound/repository/profile_relation"
 	stackRepository "devconnectrelations/internal/adapters/outbound/repository/stack"
 	"devconnectrelations/internal/domain/city"
+	"devconnectrelations/internal/domain/profile"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
 	"os"
@@ -33,9 +34,9 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
-func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *service.ProfileService {
+func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *profile.ProfileService {
 	repo := profileRepository.NewNeo4jProfileRepository(driver)
-	profile_service := service.CreateNewProfileService(repo)
+	profile_service := profile.CreateNewProfileService(repo)
 	profile_controller := rest.CreateNewProfileController(*profile_service)
 	router.POST("/profile", profile_controller.CreateProfile)
 	router.DELETE("/profile/:id", profile_controller.DeleteProfile)
@@ -43,7 +44,7 @@ func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *service.Pro
 	return profile_service
 }
 
-func setRelation(router *gin.Engine, driver neo4j.DriverWithContext, profile_service *service.ProfileService) {
+func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
 	repo := relationRepository.NewNeo4jRelationRepository(driver)
 	relation_service := service.CreateRelationService(repo)
 	relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
@@ -107,7 +108,7 @@ func main() {
 		panic(err)
 	}
 	profile_service := setProfile(router, driver)
-	setRelation(router, driver, profile_service)
+	setRelation(router, driver)
 	stackService := setStack(router, driver)
 	stackRelationService := setStackRelation(router, driver)
 	cityService := setCity(router, driver)

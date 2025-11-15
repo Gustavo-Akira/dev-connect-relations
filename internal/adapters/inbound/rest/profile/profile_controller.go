@@ -2,8 +2,7 @@ package rest
 
 import (
 	profile_dto "devconnectrelations/internal/adapters/inbound/rest/profile/dto"
-	"devconnectrelations/internal/domain/entities"
-	"devconnectrelations/internal/domain/service"
+	domain "devconnectrelations/internal/domain/profile"
 	"net/http"
 	"strconv"
 
@@ -11,10 +10,10 @@ import (
 )
 
 type ProfileController struct {
-	service *service.ProfileService
+	service *domain.ProfileService
 }
 
-func CreateNewProfileController(service service.ProfileService) *ProfileController {
+func CreateNewProfileController(service domain.ProfileService) *ProfileController {
 	return &ProfileController{service: &service}
 }
 
@@ -24,7 +23,7 @@ func (c *ProfileController) CreateProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	profile, err := entities.NewProfile(createDTO.Id, createDTO.Name)
+	profile, err := domain.NewProfile(createDTO.Id, createDTO.Name)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -4,6 +4,7 @@ import (
 	"context"
 	"devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/domain/entities"
+	profileDomain "devconnectrelations/internal/domain/profile"
 	"devconnectrelations/internal/domain/service"
 	"encoding/json"
 	"fmt"
@@ -14,14 +15,14 @@ import (
 
 type KafkaProfileCreatedConsumer struct {
 	reader               *kafka.Reader
-	service              *service.ProfileService
+	service              *profileDomain.ProfileService
 	stackService         *service.StackService
 	stackRelationService *service.StackRelationService
 	cityRelationService  *service.CityRelationService
 	cityService          *city.CityService
 }
 
-func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *service.ProfileService, stackService *service.StackService, stackRelationService *service.StackRelationService, cityService *city.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
+func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *profileDomain.ProfileService, stackService *service.StackService, stackRelationService *service.StackRelationService, cityService *city.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: brokers,
 		Topic:   topic,
@@ -46,7 +47,7 @@ func (c *KafkaProfileCreatedConsumer) Consume(ctx context.Context) error {
 			return err
 		}
 
-		var profile entities.Profile
+		var profile profileDomain.Profile
 		var createdEvent CreatedProfileEvent
 		if err := json.Unmarshal(m.Value, &createdEvent); err != nil {
 			fmt.Println("❌ Erro ao deserializar mensagem:", err)

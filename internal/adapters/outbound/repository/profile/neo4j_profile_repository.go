@@ -2,7 +2,7 @@ package profile
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
+	domain "devconnectrelations/internal/domain/profile"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -15,14 +15,14 @@ func NewNeo4jProfileRepository(driver neo4j.DriverWithContext) *Neo4jProfileRepo
 	return &Neo4jProfileRepository{driver: driver}
 }
 
-func (r *Neo4jProfileRepository) CreateProfile(ctx context.Context, profile *entities.Profile) (entities.Profile, error) {
+func (r *Neo4jProfileRepository) CreateProfile(ctx context.Context, profile *domain.Profile) (domain.Profile, error) {
 	params := map[string]any{
 		"id":   profile.ConnectId,
 		"name": profile.Name,
 	}
 	result, err := neo4j.ExecuteQuery(ctx, r.driver, "CREATE (p:Profile {id: $id, name: $name}) RETURN p.id AS id, p.name AS name", params, neo4j.EagerResultTransformer)
 	if err != nil {
-		return entities.Profile{}, err
+		return domain.Profile{}, err
 	}
 	println(result.Records)
 	return *profile, nil
@@ -36,7 +36,7 @@ func (r *Neo4jProfileRepository) DeleteProfile(ctx context.Context, id int64) er
 	return err
 }
 
-func (r *Neo4jProfileRepository) GetProfileByID(ctx context.Context, profileId int64) (*entities.Profile, error) {
+func (r *Neo4jProfileRepository) GetProfileByID(ctx context.Context, profileId int64) (*domain.Profile, error) {
 	params := map[string]any{
 		"id": profileId,
 	}
@@ -51,5 +51,5 @@ func (r *Neo4jProfileRepository) GetProfileByID(ctx context.Context, profileId i
 	record := records[0]
 	id, _ := record.Get("id")
 	name, _ := record.Get("name")
-	return entities.NewProfile(id.(int64), name.(string))
+	return domain.NewProfile(id.(int64), name.(string))
 }

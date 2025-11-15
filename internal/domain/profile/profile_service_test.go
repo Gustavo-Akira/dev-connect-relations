@@ -1,8 +1,7 @@
-package service
+package profile
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
 	"errors"
 	"testing"
 
@@ -14,10 +13,10 @@ type MockProfileRepository struct {
 	mock.Mock
 }
 
-func (m *MockProfileRepository) CreateProfile(ctx context.Context, profile *entities.Profile) (entities.Profile, error) {
+func (m *MockProfileRepository) CreateProfile(ctx context.Context, profile *Profile) (Profile, error) {
 	args := m.Called(ctx, profile)
 
-	return args.Get(0).(entities.Profile), args.Error(1)
+	return args.Get(0).(Profile), args.Error(1)
 }
 
 func (m *MockProfileRepository) DeleteProfile(ctx context.Context, id int64) error {
@@ -26,9 +25,9 @@ func (m *MockProfileRepository) DeleteProfile(ctx context.Context, id int64) err
 	return args.Error(0)
 }
 
-func (m *MockProfileRepository) GetProfileByID(ctx context.Context, profileId int64) (*entities.Profile, error) {
+func (m *MockProfileRepository) GetProfileByID(ctx context.Context, profileId int64) (*Profile, error) {
 	args := m.Called(ctx, profileId)
-	return args.Get(0).(*entities.Profile), args.Error(1)
+	return args.Get(0).(*Profile), args.Error(1)
 }
 
 func TestProfileService_CreateProfile(t *testing.T) {
@@ -38,12 +37,12 @@ func TestProfileService_CreateProfile(t *testing.T) {
 		mockRepo := new(MockProfileRepository)
 		profileService := CreateNewProfileService(mockRepo)
 
-		inputProfile := &entities.Profile{
+		inputProfile := &Profile{
 			ConnectId: 311,
 			Name:      "Software Developer",
 		}
 
-		expectedProfile := entities.Profile{
+		expectedProfile := Profile{
 			ConnectId: 311,
 			Name:      "Software Developer",
 		}
@@ -62,14 +61,14 @@ func TestProfileService_CreateProfile(t *testing.T) {
 		mockRepo := new(MockProfileRepository)
 		profileService := CreateNewProfileService(mockRepo)
 
-		inputProfile := &entities.Profile{
+		inputProfile := &Profile{
 			ConnectId: 311,
 			Name:      "Software Developer",
 		}
 
 		expectedError := errors.New("database error")
 
-		mockRepo.On("CreateProfile", ctx, inputProfile).Return(entities.Profile{}, expectedError).Once()
+		mockRepo.On("CreateProfile", ctx, inputProfile).Return(Profile{}, expectedError).Once()
 
 		createdProfile, err := profileService.CreateProfile(ctx, inputProfile)
 

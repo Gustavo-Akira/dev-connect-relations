@@ -1,4 +1,4 @@
-package entities
+package profile
 
 import "errors"
 
