@@ -10,6 +10,7 @@ import (
 	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
 	stack_relation_rest "devconnectrelations/internal/adapters/inbound/rest/stack_relation"
 	"devconnectrelations/internal/adapters/outbound/repository"
+	cityRepository "devconnectrelations/internal/adapters/outbound/repository/city"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
 	"os"
@@ -69,7 +70,7 @@ func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *servi
 }
 
 func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *service.CityService {
-	repo := repository.NewNeo4jCityRepository(driver)
+	repo := cityRepository.NewNeo4jCityRepository(driver)
 	city_service := service.NewCityService(repo)
 	city_controller := city_rest.CreateNewCityController(*city_service)
 	router.POST("/city", city_controller.CreateCity)
