@@ -9,10 +9,10 @@ import (
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
 	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
 	stack_relation_rest "devconnectrelations/internal/adapters/inbound/rest/stack_relation"
-	"devconnectrelations/internal/adapters/outbound/repository"
 	cityRepository "devconnectrelations/internal/adapters/outbound/repository/city"
 	profileRepository "devconnectrelations/internal/adapters/outbound/repository/profile"
 	relationRepository "devconnectrelations/internal/adapters/outbound/repository/profile_relation"
+	stackRepository "devconnectrelations/internal/adapters/outbound/repository/stack"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
 	"os"
@@ -53,7 +53,7 @@ func setRelation(router *gin.Engine, driver neo4j.DriverWithContext, profile_ser
 }
 
 func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *service.StackService {
-	repo := repository.NewNeo4jStackRepository(driver)
+	repo := stackRepository.NewNeo4jStackRepository(driver)
 	stack_service := service.CreateStackService(repo)
 	stack_controller := stack_rest.CreateNewStackController(*stack_service)
 	router.POST("/stack", stack_controller.CreateStack)
