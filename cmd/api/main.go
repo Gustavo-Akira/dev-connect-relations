@@ -11,6 +11,7 @@ import (
 	stack_relation_rest "devconnectrelations/internal/adapters/inbound/rest/stack_relation"
 	"devconnectrelations/internal/adapters/outbound/repository"
 	cityRepository "devconnectrelations/internal/adapters/outbound/repository/city"
+	profileRepository "devconnectrelations/internal/adapters/outbound/repository/profile"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
 	"os"
@@ -31,7 +32,7 @@ func GetEnv(key, fallback string) string {
 }
 
 func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *service.ProfileService {
-	repo := repository.NewNeo4jProfileRepository(driver)
+	repo := profileRepository.NewNeo4jProfileRepository(driver)
 	profile_service := service.CreateNewProfileService(repo)
 	profile_controller := rest.CreateNewProfileController(*profile_service)
 	router.POST("/profile", profile_controller.CreateProfile)
