@@ -2,18 +2,17 @@ package city_rest
 
 import (
 	"devconnectrelations/internal/adapters/inbound/rest/city/dto"
-	"devconnectrelations/internal/domain/entities"
-	"devconnectrelations/internal/domain/service"
+	"devconnectrelations/internal/domain/city"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CityController struct {
-	cityService service.CityService
+	cityService city.CityService
 }
 
-func CreateNewCityController(cityService service.CityService) *CityController {
+func CreateNewCityController(cityService city.CityService) *CityController {
 	return &CityController{
 		cityService: cityService,
 	}
@@ -26,7 +25,7 @@ func (cc *CityController) CreateCity(ctx *gin.Context) {
 		return
 	}
 
-	city, err := cc.cityService.CreateCity(ctx.Request.Context(), *entities.NewCity(createDTO.Name, createDTO.Country, createDTO.State))
+	city, err := cc.cityService.CreateCity(ctx.Request.Context(), *city.NewCity(createDTO.Name, createDTO.Country, createDTO.State))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return

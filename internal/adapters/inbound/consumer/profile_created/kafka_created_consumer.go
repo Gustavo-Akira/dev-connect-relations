@@ -2,6 +2,7 @@ package profile_created
 
 import (
 	"context"
+	"devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/domain/entities"
 	"devconnectrelations/internal/domain/service"
 	"encoding/json"
@@ -17,10 +18,10 @@ type KafkaProfileCreatedConsumer struct {
 	stackService         *service.StackService
 	stackRelationService *service.StackRelationService
 	cityRelationService  *service.CityRelationService
-	cityService          *service.CityService
+	cityService          *city.CityService
 }
 
-func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *service.ProfileService, stackService *service.StackService, stackRelationService *service.StackRelationService, cityService *service.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
+func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *service.ProfileService, stackService *service.StackService, stackRelationService *service.StackRelationService, cityService *city.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: brokers,
 		Topic:   topic,
@@ -81,7 +82,7 @@ func (c *KafkaProfileCreatedConsumer) Consume(ctx context.Context) error {
 				continue
 			}
 		}
-		city := *entities.NewCity(createdEvent.City, createdEvent.Country, createdEvent.State)
+		city := *city.NewCity(createdEvent.City, createdEvent.Country, createdEvent.State)
 		_, existCityError := c.cityService.GetCityByFullName(ctx, city.GetFullName())
 		if existCityError != nil {
 			if strings.Contains(existCityError.Error(), "not found") {

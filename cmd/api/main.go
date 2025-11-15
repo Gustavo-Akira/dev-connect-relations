@@ -13,6 +13,7 @@ import (
 	profileRepository "devconnectrelations/internal/adapters/outbound/repository/profile"
 	relationRepository "devconnectrelations/internal/adapters/outbound/repository/profile_relation"
 	stackRepository "devconnectrelations/internal/adapters/outbound/repository/stack"
+	"devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
 	"os"
@@ -71,16 +72,16 @@ func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *servi
 	return stack_relation_service
 }
 
-func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *service.CityService {
+func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *city.CityService {
 	repo := cityRepository.NewNeo4jCityRepository(driver)
-	city_service := service.NewCityService(repo)
+	city_service := city.NewCityService(repo)
 	city_controller := city_rest.CreateNewCityController(*city_service)
 	router.POST("/city", city_controller.CreateCity)
 	router.GET("/city/:fullName", city_controller.GetCityByFullName)
 	return city_service
 }
 
-func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *service.CityService) *service.CityRelationService {
+func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *city.CityService) *service.CityRelationService {
 	repo := relationRepository.NewNeo4jRelationCityRepository(&driver)
 	city_relation_service := service.CreateNewCityRelationService(repo, cityService)
 	city_relation_controller := cityrelation.CreateNewCityRelationController(*city_relation_service)

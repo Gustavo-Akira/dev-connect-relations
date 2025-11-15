@@ -2,16 +2,17 @@ package service
 
 import (
 	"context"
+	"devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/domain/entities"
 	"devconnectrelations/internal/domain/ports/outbound/repository"
 )
 
 type CityRelationService struct {
 	cityRelationRepo repository.CityRelationRepository
-	cityService      CityService
+	cityService      city.CityService
 }
 
-func CreateNewCityRelationService(cityRelationRepo repository.CityRelationRepository, cityService *CityService) *CityRelationService {
+func CreateNewCityRelationService(cityRelationRepo repository.CityRelationRepository, cityService *city.CityService) *CityRelationService {
 	return &CityRelationService{
 		cityRelationRepo: cityRelationRepo,
 		cityService:      *cityService,

@@ -1,23 +1,22 @@
-package service
+package city
 
 import (
 	"context"
-	"devconnectrelations/internal/domain/entities"
 	"errors"
 	"testing"
 )
 
 type MockCityRepository struct{}
 
-func (m *MockCityRepository) CreateCity(ctx context.Context, city entities.City) (entities.City, error) {
+func (m *MockCityRepository) CreateCity(ctx context.Context, city City) (City, error) {
 	if city.Name == "ERROR" {
-		return entities.City{}, errors.New("An error occurred")
+		return City{}, errors.New("An error occurred")
 	}
 	return city, nil
 }
 
-func (m *MockCityRepository) GetCityByFullName(ctx context.Context, fullName string) (*entities.City, error) {
-	return &entities.City{
+func (m *MockCityRepository) GetCityByFullName(ctx context.Context, fullName string) (*City, error) {
+	return &City{
 		Name:    "MockCity",
 		State:   "MC",
 		Country: "MockCountry",
@@ -28,7 +27,7 @@ func TestCityService_CreateCity(t *testing.T) {
 	mockRepo := &MockCityRepository{}
 	cityService := NewCityService(mockRepo)
 	t.Run("should create city", func(t *testing.T) {
-		city := entities.City{
+		city := City{
 			Name:    "San Francisco",
 			State:   "CA",
 			Country: "USA",
@@ -43,7 +42,7 @@ func TestCityService_CreateCity(t *testing.T) {
 		}
 	})
 	t.Run("should return error when repository fails", func(t *testing.T) {
-		city := entities.City{
+		city := City{
 			Name:    "ERROR",
 			State:   "CA",
 			Country: "USA",
