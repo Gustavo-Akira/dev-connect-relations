@@ -6,6 +6,7 @@ import (
 	"devconnectrelations/internal/domain/entities"
 	profileDomain "devconnectrelations/internal/domain/profile"
 	"devconnectrelations/internal/domain/service"
+	stackDomain "devconnectrelations/internal/domain/stack"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -16,13 +17,13 @@ import (
 type KafkaProfileCreatedConsumer struct {
 	reader               *kafka.Reader
 	service              *profileDomain.ProfileService
-	stackService         *service.StackService
+	stackService         *stackDomain.StackService
 	stackRelationService *service.StackRelationService
 	cityRelationService  *service.CityRelationService
 	cityService          *city.CityService
 }
 
-func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *profileDomain.ProfileService, stackService *service.StackService, stackRelationService *service.StackRelationService, cityService *city.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
+func NewKafkaProfileCreatedConsumer(brokers []string, topic, groupID string, service *profileDomain.ProfileService, stackService *stackDomain.StackService, stackRelationService *service.StackRelationService, cityService *city.CityService, cityRelationService *service.CityRelationService) *KafkaProfileCreatedConsumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: brokers,
 		Topic:   topic,
@@ -61,14 +62,14 @@ func (c *KafkaProfileCreatedConsumer) Consume(ctx context.Context) error {
 			fmt.Println("❌ Erro ao criar perfil:", err)
 			continue
 		}
-		var stacks []*entities.Stack
+		var stacks []*stackDomain.Stack
 		for _, stackName := range createdEvent.Stack {
 			existsStack, getErr := c.stackService.GetStackByName(ctx, stackName)
 			if getErr != nil {
 				fmt.Println("❌ Erro ao verificar stack existente:", getErr)
 				continue
 			}
-			if existsStack == (entities.Stack{}) {
+			if existsStack == (stackDomain.Stack{}) {
 				newStack, createErr := c.stackService.CreateStack(ctx, stackName)
 				if createErr != nil {
 					fmt.Println("❌ Erro ao criar stack:", createErr)

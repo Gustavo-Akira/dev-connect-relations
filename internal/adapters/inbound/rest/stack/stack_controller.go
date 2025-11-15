@@ -2,17 +2,16 @@ package stack_controller
 
 import (
 	"devconnectrelations/internal/adapters/inbound/rest/stack/dto"
-	"devconnectrelations/internal/domain/entities"
-	"devconnectrelations/internal/domain/service"
+	domain "devconnectrelations/internal/domain/stack"
 
 	"github.com/gin-gonic/gin"
 )
 
 type StackController struct {
-	service service.StackService
+	service domain.StackService
 }
 
-func CreateNewStackController(svc service.StackService) *StackController {
+func CreateNewStackController(svc domain.StackService) *StackController {
 	return &StackController{service: svc}
 }
 
@@ -38,7 +37,7 @@ func (c *StackController) GetStackByName(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	if stack == (entities.Stack{}) {
+	if stack == (domain.Stack{}) {
 		ctx.JSON(404, gin.H{"error": "stack not found"})
 		return
 	}

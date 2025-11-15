@@ -16,6 +16,7 @@ import (
 	"devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/domain/profile"
 	"devconnectrelations/internal/domain/service"
+	"devconnectrelations/internal/domain/stack"
 	"fmt"
 	"os"
 	"os/signal"
@@ -54,9 +55,9 @@ func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
 	router.GET("/relation/pending/:fromId", relation_controller.GetAllRelationPendingByFromId)
 }
 
-func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *service.StackService {
+func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *stack.StackService {
 	repo := stackRepository.NewNeo4jStackRepository(driver)
-	stack_service := service.CreateStackService(repo)
+	stack_service := stack.CreateStackService(repo)
 	stack_controller := stack_rest.CreateNewStackController(*stack_service)
 	router.POST("/stack", stack_controller.CreateStack)
 	router.GET("/stack/:name", stack_controller.GetStackByName)
