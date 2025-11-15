@@ -12,6 +12,7 @@ import (
 	"devconnectrelations/internal/adapters/outbound/repository"
 	cityRepository "devconnectrelations/internal/adapters/outbound/repository/city"
 	profileRepository "devconnectrelations/internal/adapters/outbound/repository/profile"
+	relationRepository "devconnectrelations/internal/adapters/outbound/repository/profile_relation"
 	"devconnectrelations/internal/domain/service"
 	"fmt"
 	"os"
@@ -42,7 +43,7 @@ func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *service.Pro
 }
 
 func setRelation(router *gin.Engine, driver neo4j.DriverWithContext, profile_service *service.ProfileService) {
-	repo := repository.NewNeo4jRelationRepository(driver)
+	repo := relationRepository.NewNeo4jRelationRepository(driver)
 	relation_service := service.CreateRelationService(repo)
 	relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
 	router.POST("/relation", relation_controller.CreateRelation)
@@ -62,7 +63,7 @@ func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *service.Stack
 }
 
 func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *service.StackRelationService {
-	repo := repository.NewNeo4jStackRelationRepository(driver)
+	repo := relationRepository.NewNeo4jStackRelationRepository(driver)
 	stack_relation_service := service.CreateStackRelationService(repo)
 	stack_relation_controller := stack_relation_rest.CreateNewStackRelationController(stack_relation_service)
 	router.POST("/stack-relation", stack_relation_controller.CreateStackRelation)
@@ -80,7 +81,7 @@ func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *service.CitySe
 }
 
 func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *service.CityService) *service.CityRelationService {
-	repo := repository.NewNeo4jRelationCityRepository(&driver)
+	repo := relationRepository.NewNeo4jRelationCityRepository(&driver)
 	city_relation_service := service.CreateNewCityRelationService(repo, cityService)
 	city_relation_controller := cityrelation.CreateNewCityRelationController(*city_relation_service)
 	router.POST("/city-relation", city_relation_controller.CreateCityRelation)
