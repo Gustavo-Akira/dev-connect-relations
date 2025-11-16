@@ -8,7 +8,7 @@ import (
 )
 
 func TestSaveNewCityEntityWithValidInputs(t *testing.T) {
-
+	t.Parallel()
 	driver, cleanup := tests.SetupNeo4j(t)
 	defer cleanup()
 	repo := NewNeo4jCityRepository(driver)
@@ -29,7 +29,7 @@ func TestSaveNewCityEntityWithValidInputs(t *testing.T) {
 }
 
 func TestGetCityByFullNameWithExistingCity(t *testing.T) {
-
+	t.Parallel()
 	driver, cleanup := tests.SetupNeo4j(t)
 	defer cleanup()
 	repo := NewNeo4jCityRepository(driver)
@@ -57,7 +57,7 @@ func TestGetCityByFullNameWithExistingCity(t *testing.T) {
 }
 
 func TestGetCityByFullNameWithNonExistingCity(t *testing.T) {
-
+	t.Parallel()
 	driver, cleanup := tests.SetupNeo4j(t)
 	defer cleanup()
 	repo := NewNeo4jCityRepository(driver)
