@@ -4,17 +4,30 @@ import (
 	"context"
 	domain "devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/tests"
+	"os"
 	"testing"
+
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
+
+var (
+	driver neo4j.DriverWithContext
+)
+
+func TestMain(m *testing.M) {
+	d, cleanup := tests.SetupNeo4j(&testing.T{})
+	driver = d
+	code := m.Run()
+	cleanup()
+	os.Exit(code)
+}
 
 func TestSaveNewCityEntityWithValidInputs(t *testing.T) {
 	t.Parallel()
-	driver, cleanup := tests.SetupNeo4j(t)
-	defer cleanup()
 	repo := NewNeo4jCityRepository(driver)
 
 	city := domain.City{
-		Name:    "San Francisco",
+		Name:    "San Francisco 1",
 		State:   "CA",
 		Country: "USA",
 	}
@@ -30,8 +43,6 @@ func TestSaveNewCityEntityWithValidInputs(t *testing.T) {
 
 func TestGetCityByFullNameWithExistingCity(t *testing.T) {
 	t.Parallel()
-	driver, cleanup := tests.SetupNeo4j(t)
-	defer cleanup()
 	repo := NewNeo4jCityRepository(driver)
 
 	city := domain.City{
@@ -58,8 +69,6 @@ func TestGetCityByFullNameWithExistingCity(t *testing.T) {
 
 func TestGetCityByFullNameWithNonExistingCity(t *testing.T) {
 	t.Parallel()
-	driver, cleanup := tests.SetupNeo4j(t)
-	defer cleanup()
 	repo := NewNeo4jCityRepository(driver)
 	_, err := repo.GetCityByFullName(context.Background(), "NonExistingCity, XX, YY")
 	if err == nil {
