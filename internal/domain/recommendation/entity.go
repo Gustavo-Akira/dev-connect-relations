@@ -1,11 +1,11 @@
 package recommendation
 
 type Recommendation struct {
-	ID    string
+	ID    int64
 	Score float64
 }
 
-func CreateRecommendation(id string, score float64) *Recommendation {
+func CreateRecommendation(id int64, score float64) *Recommendation {
 	return &Recommendation{
 		ID:    id,
 		Score: score,

@@ -1,7 +1,8 @@
-package city
+package city_test
 
 import (
 	"context"
+	repository "devconnectrelations/internal/adapters/outbound/repository/city"
 	domain "devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/tests"
 	"os"
@@ -24,7 +25,7 @@ func TestMain(m *testing.M) {
 
 func TestSaveNewCityEntityWithValidInputs(t *testing.T) {
 	t.Parallel()
-	repo := NewNeo4jCityRepository(driver)
+	repo := repository.NewNeo4jCityRepository(driver)
 
 	city := domain.City{
 		Name:    "San Francisco 1",
@@ -43,7 +44,7 @@ func TestSaveNewCityEntityWithValidInputs(t *testing.T) {
 
 func TestGetCityByFullNameWithExistingCity(t *testing.T) {
 	t.Parallel()
-	repo := NewNeo4jCityRepository(driver)
+	repo := repository.NewNeo4jCityRepository(driver)
 
 	city := domain.City{
 		Name:    "Los Angeles",
@@ -69,7 +70,7 @@ func TestGetCityByFullNameWithExistingCity(t *testing.T) {
 
 func TestGetCityByFullNameWithNonExistingCity(t *testing.T) {
 	t.Parallel()
-	repo := NewNeo4jCityRepository(driver)
+	repo := repository.NewNeo4jCityRepository(driver)
 	_, err := repo.GetCityByFullName(context.Background(), "NonExistingCity, XX, YY")
 	if err == nil {
 		t.Fatalf("expected error, got nil")

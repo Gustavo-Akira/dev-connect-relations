@@ -3,8 +3,8 @@ package recommendation
 import "testing"
 
 func TestCreateRecommencDation(t *testing.T) {
-	rec := CreateRecommendation("rec1", 0.85)
-	if rec.ID != "rec1" {
-		t.Errorf("Expected ID to be 'rec1', got '%s'", rec.ID)
+	rec := CreateRecommendation(1, 0.85)
+	if rec.ID != 1 {
+		t.Errorf("Expected ID to be 'rec1', got '%d'", rec.ID)
 	}
 }
