@@ -9,6 +9,7 @@ import (
 	cityDomain "devconnectrelations/internal/domain/city"
 	domain "devconnectrelations/internal/domain/profile"
 	cityRelationDomain "devconnectrelations/internal/domain/profile_relation/city"
+	relationDomain "devconnectrelations/internal/domain/profile_relation/relation"
 	stackRelationDomain "devconnectrelations/internal/domain/profile_relation/stack"
 	stackDomain "devconnectrelations/internal/domain/stack"
 	"testing"
@@ -104,6 +105,20 @@ func SeedStackRelationships(t *testing.T, driver neo4j.DriverWithContext) {
 		stackName := stacks[i%len(stacks)]
 		stackRelation, _ := stackRelationDomain.NewStackRelation(stackName, profileId)
 		_, err := stack_relation_repository.CreateStackRelation(ctx, stackRelation)
+		require.NoError(t, err)
+	}
+}
+
+func SeedRelations(t *testing.T, driver neo4j.DriverWithContext) {
+	ctx := context.Background()
+	relation_repo := relation.NewNeo4jRelationRepository(driver)
+	relations := []relationDomain.Relation{
+		{FromID: 1, ToID: 2, Type: "FRIEND", Status: "ACCEPTED"},
+		{FromID: 1, ToID: 3, Type: "BLOCKED", Status: "ACCEPTED"},
+		{FromID: 2, ToID: 4, Type: "FRIEND", Status: "ACCEPTED"},
+	}
+	for _, rel := range relations {
+		_, err := relation_repo.CreateRelation(ctx, rel)
 		require.NoError(t, err)
 	}
 }

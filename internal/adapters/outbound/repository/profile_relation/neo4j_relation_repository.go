@@ -3,6 +3,7 @@ package relation
 import (
 	"context"
 	domain "devconnectrelations/internal/domain/profile_relation/relation"
+	"devconnectrelations/internal/domain/recommendation"
 	"errors"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -99,4 +100,57 @@ func (r *Neo4jRelationRepository) GetAllRelationPendingByFromId(ctx context.Cont
 		relations = append(relations, relation)
 	}
 	return relations, nil
+}
+
+func (r *Neo4jRelationRepository) JaccardIndexByProfileId(ctx context.Context, profileID int64) ([]recommendation.Recommendation, error) {
+	params := map[string]any{
+		"id": profileID,
+	}
+
+	query := `MATCH (p1:Profile {id: $id})-[r:Relation {type:"FRIEND", status:"ACCEPTED"}]-(p2:Profile)
+WITH p1, COLLECT(p2.id) AS friends_p1
+
+MATCH (p3:Profile)
+WHERE p3.id <> p1.id
+AND NOT EXISTS {
+  MATCH (p1)-[r_check:Relation]-(p3)
+  WHERE r_check.type IN ["FRIEND", "BLOCKED"]
+}
+
+MATCH (p3)-[r:Relation {type:"FRIEND", status:"ACCEPTED"}]-(p4:Profile)
+WITH p1, p3, friends_p1, COLLECT(p4.id) AS friends_p3
+
+WITH 
+    p3,
+    friends_p1,
+    friends_p3,
+    [x IN friends_p1 WHERE x IN friends_p3] AS inter,
+    (friends_p1 + [x IN friends_p3 WHERE NOT x IN friends_p1]) AS uni
+
+WHERE SIZE(uni) > 0 
+
+RETURN 
+    p3.id AS recommended_profile,
+    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_friend
+ORDER BY jaccard_friend DESC
+LIMIT 20`
+
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, query, params, neo4j.EagerResultTransformer)
+
+	if err != nil {
+		return nil, err
+	}
+
+	records := result.Records
+	jaccardIndices := make([]recommendation.Recommendation, 0, len(records))
+	for _, record := range records {
+		jaccardIndex := record.Values[1].(float64)
+		recommendedProfileID := record.Values[0].(int64)
+		jaccardInde := recommendation.Recommendation{
+			ID:    recommendedProfileID,
+			Score: jaccardIndex,
+		}
+		jaccardIndices = append(jaccardIndices, jaccardInde)
+	}
+	return jaccardIndices, nil
 }
