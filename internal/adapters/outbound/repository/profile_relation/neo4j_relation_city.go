@@ -3,6 +3,7 @@ package relation
 import (
 	"context"
 	"devconnectrelations/internal/domain/profile_relation/city"
+	"devconnectrelations/internal/domain/recommendation"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -28,4 +29,49 @@ func (r *Neo4jRelationCityRepository) CreateCityRelation(ctx context.Context, ci
 	}
 
 	return city, nil
+}
+
+func (r *Neo4jRelationCityRepository) JaccardIndexByProfileId(ctx context.Context, profileID int64) ([]recommendation.Recommendation, error) {
+	params := map[string]any{
+		"id": profileID,
+	}
+	query := `MATCH (p1:Profile {id: $id})-[:LIVES_IN]->(c:City)
+WITH p1, COLLECT(c.full_name) AS cities_p1
+
+MATCH (p2:Profile)-[:LIVES_IN]->(c2:City)
+WHERE p2.id <> p1.id
+WITH p1, p2, cities_p1, COLLECT(c2.full_name) AS cities_p2
+
+WITH 
+    p1,
+    p2,
+    cities_p1,
+    cities_p2,
+    [x IN cities_p1 WHERE x IN cities_p2] AS inter,
+    (cities_p1 + [x IN cities_p2 WHERE NOT x IN cities_p1]) AS uni
+
+// evita divisão por zero
+WHERE SIZE(uni) > 0
+
+RETURN 
+    p2.id AS recommended_profile,
+    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_city
+ORDER BY jaccard_city DESC
+LIMIT 20`
+	result, err := neo4j.ExecuteQuery(ctx, *r.driver, query, params, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+	records := result.Records
+	jaccardIndices := make([]recommendation.Recommendation, 0, len(records))
+	for _, record := range records {
+		jaccardIndex := record.Values[1].(float64)
+		profileID := record.Values[0].(int64)
+		jaccardInde := recommendation.Recommendation{
+			ID:    profileID,
+			Score: jaccardIndex,
+		}
+		jaccardIndices = append(jaccardIndices, jaccardInde)
+	}
+	return jaccardIndices, nil
 }

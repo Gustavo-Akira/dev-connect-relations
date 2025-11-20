@@ -19,7 +19,7 @@ services:
       - dev-connect
 
   neo4j:
-    image: neo4j:2025.08.0
+    image: neo4j:latest
     container_name: devconnect_neo4j
     ports:
       - "7474:7474"
