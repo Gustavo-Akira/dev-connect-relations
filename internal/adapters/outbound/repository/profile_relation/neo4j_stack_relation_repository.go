@@ -3,6 +3,7 @@ package relation
 import (
 	"context"
 	"devconnectrelations/internal/domain/profile_relation/stack"
+	"devconnectrelations/internal/domain/recommendation"
 	"fmt"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -43,4 +44,37 @@ func (r *Neo4JStackRelationRepository) DeleteStackRelation(ctx context.Context, 
 		`MATCH (p:Profile {id: $profileID})-[r:USES]->(s:Stack {name: $stackName})
 		 DELETE r`, params, neo4j.EagerResultTransformer)
 	return err
+}
+
+func (r *Neo4JStackRelationRepository) JaccardIndexByProfileId(ctx context.Context, profileID int64) ([]recommendation.Recommendation, error) {
+	params := map[string]any{
+		"id": profileID,
+	}
+	query := `MATCH (p1:Profile {id:$id}) -[:USES]-> (s1:Stack) WITH p1,collect(s1.name) AS stacks_p1 
+MATCH (p2: Profile) -[:USES]->(s2:Stack) WHERE p2 <> p1 
+WITH p2,collect(s2.name) AS stacks_p2,p1,stacks_p1
+
+WITH p1,p2,stacks_p1,stacks_p2,
+[x IN stacks_p1 WHERE x IN stacks_p2] AS inter,
+(stacks_p1 + [x IN stacks_p2 WHERE NOT x IN stacks_p1]) as uni
+RETURN 
+    p2.id AS recommended_profile,
+    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_stack
+ORDER BY jaccard_stack DESC
+LIMIT 20`
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, query, params, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+	jaccardIndices := make([]recommendation.Recommendation, 0)
+	records := result.Records
+	for _, record := range records {
+		jaccardIndex := record.Values[1].(float64)
+		recommendedProfileID := record.Values[0].(int64)
+		jaccardIndices = append(jaccardIndices, recommendation.Recommendation{
+			ID:    recommendedProfileID,
+			Score: jaccardIndex,
+		})
+	}
+	return jaccardIndices, nil
 }

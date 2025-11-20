@@ -1,7 +1,8 @@
-package stack
+package stack_test
 
 import (
 	"context"
+	"devconnectrelations/internal/adapters/outbound/repository/stack"
 	domain "devconnectrelations/internal/domain/stack"
 	"devconnectrelations/internal/tests"
 	"os"
@@ -26,7 +27,7 @@ func TestNeo4jStackRepository_CreateStack(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testStack := &domain.Stack{Name: "TestStack"}
-	repo := NewNeo4jStackRepository(driver)
+	repo := stack.NewNeo4jStackRepository(driver)
 	stack, err := repo.CreateStack(ctx, testStack)
 	if err != nil {
 		t.Fatalf("Failed to save stack: %v", err)
@@ -41,7 +42,7 @@ func TestNeo4jStackRepository_GetStackByName(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testStack := &domain.Stack{Name: "TestStackToGet"}
-	repo := NewNeo4jStackRepository(driver)
+	repo := stack.NewNeo4jStackRepository(driver)
 	_, err := repo.CreateStack(ctx, testStack)
 	if err != nil {
 		t.Fatalf("Failed to save stack: %v", err)
@@ -59,7 +60,7 @@ func TestNeo4jStackRepository_DeleteStack(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testStack := &domain.Stack{Name: "TestStackToDelete"}
-	repo := NewNeo4jStackRepository(driver)
+	repo := stack.NewNeo4jStackRepository(driver)
 	_, err := repo.CreateStack(ctx, testStack)
 	if err != nil {
 		t.Fatalf("Failed to save stack: %v", err)

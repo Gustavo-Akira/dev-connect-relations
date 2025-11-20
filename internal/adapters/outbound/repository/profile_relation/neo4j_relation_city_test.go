@@ -14,8 +14,10 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	d, cleanup := tests.SetupNeo4j(&testing.T{})
+	test := &testing.T{}
+	d, cleanup := tests.SetupNeo4j(test)
 	driver = d
+	tests.SeedProfiles(test, driver)
 	code := m.Run()
 	cleanup()
 	os.Exit(code)
@@ -23,7 +25,7 @@ func TestMain(m *testing.M) {
 
 func TestCreateCityRelation(t *testing.T) {
 	t.Parallel()
-	tests.SeedProfiles(t, driver)
+
 	tests.SeedCityRelationships(t, driver)
 }
 

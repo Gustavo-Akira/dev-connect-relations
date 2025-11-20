@@ -5,9 +5,12 @@ import (
 	"devconnectrelations/internal/adapters/outbound/repository/city"
 	"devconnectrelations/internal/adapters/outbound/repository/profile"
 	relation "devconnectrelations/internal/adapters/outbound/repository/profile_relation"
+	"devconnectrelations/internal/adapters/outbound/repository/stack"
 	cityDomain "devconnectrelations/internal/domain/city"
 	domain "devconnectrelations/internal/domain/profile"
-	relationDomain "devconnectrelations/internal/domain/profile_relation/city"
+	cityRelationDomain "devconnectrelations/internal/domain/profile_relation/city"
+	stackRelationDomain "devconnectrelations/internal/domain/profile_relation/stack"
+	stackDomain "devconnectrelations/internal/domain/stack"
 	"testing"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -79,8 +82,28 @@ func SeedCityRelationships(t *testing.T, driver neo4j.DriverWithContext) {
 
 	for i, profileId := range profileIds {
 		cityFullName := cityFullNames[i%len(cityFullNames)]
-		cityRelation := relationDomain.NewCityRelation(cityFullName, profileId)
+		cityRelation := cityRelationDomain.NewCityRelation(cityFullName, profileId)
 		_, err := city_relationship_repo.CreateCityRelation(ctx, cityRelation)
+		require.NoError(t, err)
+	}
+}
+
+func SeedStackRelationships(t *testing.T, driver neo4j.DriverWithContext) {
+	ctx := context.Background()
+	stack_relation_repository := relation.NewNeo4jStackRelationRepository(driver)
+	stack_repo := stack.NewNeo4jStackRepository(driver)
+	stacks := []string{"go", "python", "javascript"}
+	for _, stack_name := range stacks {
+		create_stack, err := stackDomain.NewStack(stack_name)
+		_, err = stack_repo.CreateStack(ctx, create_stack)
+		require.NoError(t, err)
+	}
+	profileIds := []int64{1, 2, 3, 4, 5}
+	// Now i want this to create similarity between profiles based on stacks
+	for i, profileId := range profileIds {
+		stackName := stacks[i%len(stacks)]
+		stackRelation, _ := stackRelationDomain.NewStackRelation(stackName, profileId)
+		_, err := stack_relation_repository.CreateStackRelation(ctx, stackRelation)
 		require.NoError(t, err)
 	}
 }
