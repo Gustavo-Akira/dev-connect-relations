@@ -39,7 +39,10 @@ func (r *Neo4jRelationCityRepository) JaccardIndexByProfileId(ctx context.Contex
 WITH p1, COLLECT(c.full_name) AS cities_p1
 
 MATCH (p2:Profile)-[:LIVES_IN]->(c2:City)
-WHERE p2.id <> p1.id
+WHERE NOT EXISTS {
+  MATCH (p1)-[r:Relation]-(p2)
+  WHERE r.type IN ["FRIEND", "BLOCKED"]
+} AND p1<> p2
 WITH p1, p2, cities_p1, COLLECT(c2.full_name) AS cities_p2
 
 WITH 

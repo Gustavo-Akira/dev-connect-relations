@@ -51,7 +51,11 @@ func (r *Neo4JStackRelationRepository) JaccardIndexByProfileId(ctx context.Conte
 		"id": profileID,
 	}
 	query := `MATCH (p1:Profile {id:$id}) -[:USES]-> (s1:Stack) WITH p1,collect(s1.name) AS stacks_p1 
-MATCH (p2: Profile) -[:USES]->(s2:Stack) WHERE p2 <> p1 
+MATCH (p2: Profile) -[:USES]->(s2:Stack)
+WHERE NOT EXISTS {
+  MATCH (p1)-[r:Relation]-(p2)
+  WHERE r.type IN ["FRIEND", "BLOCKED"]
+} AND p1<> p2
 WITH p2,collect(s2.name) AS stacks_p2,p1,stacks_p1
 
 WITH p1,p2,stacks_p1,stacks_p2,
