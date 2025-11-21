@@ -4,6 +4,10 @@ import (
 	"context"
 )
 
+type IRecommendationService interface {
+	GetRecommendationByProfileId(ctx context.Context, profileID int64) ([]Recommendation, error)
+}
+
 type RecommendationService struct {
 	RecommendationAlgorithm RecommendationAlgorithm
 }
