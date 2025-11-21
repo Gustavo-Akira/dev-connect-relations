@@ -6,6 +6,7 @@ import (
 	city_rest "devconnectrelations/internal/adapters/inbound/rest/city"
 	cityrelation "devconnectrelations/internal/adapters/inbound/rest/city_relation"
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
+	recommendationController "devconnectrelations/internal/adapters/inbound/rest/recommendation"
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
 	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
 	stack_relation_rest "devconnectrelations/internal/adapters/inbound/rest/stack_relation"
@@ -18,6 +19,8 @@ import (
 	cityRelationDomain "devconnectrelations/internal/domain/profile_relation/city"
 	"devconnectrelations/internal/domain/profile_relation/relation"
 	stackRelationDomain "devconnectrelations/internal/domain/profile_relation/stack"
+	"devconnectrelations/internal/domain/recommendation"
+	"devconnectrelations/internal/domain/recommendation/algorithms"
 	"devconnectrelations/internal/domain/stack"
 	"fmt"
 	"os"
@@ -47,7 +50,7 @@ func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *profile.Pro
 	return profile_service
 }
 
-func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
+func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) relation.RelationsRepository {
 	repo := relationRepository.NewNeo4jRelationRepository(driver)
 	relation_service := relation.CreateRelationService(repo)
 	relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
@@ -55,6 +58,7 @@ func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) {
 	router.GET("/relation/:fromId", relation_controller.GetAllRelationsByFromId)
 	router.PATCH("/relation/accept/:fromId/:toId", relation_controller.AcceptRelation)
 	router.GET("/relation/pending/:fromId", relation_controller.GetAllRelationPendingByFromId)
+	return repo
 }
 
 func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *stack.StackService {
@@ -67,13 +71,13 @@ func setStack(router *gin.Engine, driver neo4j.DriverWithContext) *stack.StackSe
 	return stack_service
 }
 
-func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) *stackRelationDomain.StackRelationService {
+func setStackRelation(router *gin.Engine, driver neo4j.DriverWithContext) (*stackRelationDomain.StackRelationService, stackRelationDomain.StackRelationRepository) {
 	repo := relationRepository.NewNeo4jStackRelationRepository(driver)
 	stack_relation_service := stackRelationDomain.CreateStackRelationService(repo)
 	stack_relation_controller := stack_relation_rest.CreateNewStackRelationController(stack_relation_service)
 	router.POST("/stack-relation", stack_relation_controller.CreateStackRelation)
 	router.DELETE("/stack-relation", stack_relation_controller.DeleteStackRelation)
-	return stack_relation_service
+	return stack_relation_service, repo
 }
 
 func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *city.CityService {
@@ -85,12 +89,21 @@ func setCity(router *gin.Engine, driver neo4j.DriverWithContext) *city.CityServi
 	return city_service
 }
 
-func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *city.CityService) *cityRelationDomain.CityRelationService {
+func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, cityService *city.CityService) (*cityRelationDomain.CityRelationService, cityRelationDomain.CityRelationRepository) {
 	repo := relationRepository.NewNeo4jRelationCityRepository(&driver)
 	city_relation_service := cityRelationDomain.CreateNewCityRelationService(repo, cityService)
 	city_relation_controller := cityrelation.CreateNewCityRelationController(*city_relation_service)
 	router.POST("/city-relation", city_relation_controller.CreateCityRelation)
-	return city_relation_service
+	return city_relation_service, repo
+}
+
+func setRecommendation(router *gin.Engine, cityRelationRepo cityRelationDomain.CityRelationRepository, stackRelationRepo stackRelationDomain.StackRelationRepository, profileRelationRepo relation.RelationsRepository) {
+	algorithm := algorithms.NewJaccardAlgorithm(cityRelationRepo, profileRelationRepo, stackRelationRepo)
+	recommendation_service := recommendation.RecommendationService{
+		RecommendationAlgorithm: algorithm,
+	}
+	recommendation_controller := recommendationController.NewRecommendationController(&recommendation_service)
+	router.GET("/recommendations/:userId", recommendation_controller.GetRecommendations)
 }
 
 func main() {
@@ -111,15 +124,16 @@ func main() {
 		panic(err)
 	}
 	profile_service := setProfile(router, driver)
-	setRelation(router, driver)
+	relationRepo := setRelation(router, driver)
 	stackService := setStack(router, driver)
-	stackRelationService := setStackRelation(router, driver)
+	stackRelationService, stackRelationRepo := setStackRelation(router, driver)
 	cityService := setCity(router, driver)
-	cityRelationService := setCityRelation(router, driver, cityService)
+	cityRelationService, cityRelationRepo := setCityRelation(router, driver, cityService)
 	kafka_brokers := []string{GetEnv("KAFKA_SERVER", "localhost:9092")}
 	kafka_profile_create_topic := GetEnv("KAFKA_PROFILE_CREATED_TOPIC", "dev-profile.created.v1")
 	kafka_group_id := GetEnv("KAFKA_GROUP_ID", "dev-connect-relations-group")
 	consumer := profile_created.NewKafkaProfileCreatedConsumer(kafka_brokers, kafka_profile_create_topic, kafka_group_id, profile_service, stackService, stackRelationService, cityService, cityRelationService)
+	setRecommendation(router, cityRelationRepo, stackRelationRepo, relationRepo)
 	go func() {
 		if err := consumer.Consume(ctx); err != nil {
 			fmt.Println("kafka consumer error:", err)
