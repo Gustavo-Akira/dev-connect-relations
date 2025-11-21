@@ -9,7 +9,8 @@ type RecommendationService struct {
 }
 
 func (recommendation_service *RecommendationService) GetRecommendationByProfileId(ctx context.Context, profileID int64) ([]Recommendation, error) {
-	recommendations, err := recommendation_service.RecommendationAlgorithm.Run(ctx, profileID)
+	weights := []float64{0.5, 0.3, 0.2}
+	recommendations, err := recommendation_service.RecommendationAlgorithm.Run(ctx, weights, profileID)
 	if err != nil {
 		return nil, err
 	}

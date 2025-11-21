@@ -9,7 +9,7 @@ import (
 
 type MockRecommendationAlgorithm struct{}
 
-func (m *MockRecommendationAlgorithm) Run(ctx context.Context, profileId int64) ([]recommendation.Recommendation, error) {
+func (m *MockRecommendationAlgorithm) Run(ctx context.Context, weights []float64, profileId int64) ([]recommendation.Recommendation, error) {
 	if profileId == 0 {
 		return []recommendation.Recommendation{}, errors.New("invalid profile ID")
 	}

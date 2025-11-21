@@ -27,7 +27,7 @@ func NewJaccardAlgorithm(
 	}
 }
 
-func (ja *JaccardAlgorithm) Run(ctx context.Context, profileId int64) ([]recommendation.Recommendation, error) {
+func (ja *JaccardAlgorithm) Run(ctx context.Context, weights []float64, profileId int64) ([]recommendation.Recommendation, error) {
 	city_score, city_error := ja.CityRelationRepository.JaccardIndexByProfileId(ctx, profileId)
 	if city_error != nil {
 		return nil, city_error
@@ -42,14 +42,14 @@ func (ja *JaccardAlgorithm) Run(ctx context.Context, profileId int64) ([]recomme
 		return nil, relation_error
 	}
 
-	final := combineScores(city_score, stack_score, relation_score)
+	final := combineScores(weights, city_score, stack_score, relation_score)
 
 	return final, nil
 }
 
-func combineScores(scoreSets ...[]recommendation.Recommendation) []recommendation.Recommendation {
+func combineScores(weights []float64, scoreSets ...[]recommendation.Recommendation) []recommendation.Recommendation {
 	combined := make(map[int64]float64)
-	weights := []float64{0.5, 0.3, 0.2}
+
 	for i, set := range scoreSets {
 		weight := weights[i]
 		for _, s := range set {

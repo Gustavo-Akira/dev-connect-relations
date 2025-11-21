@@ -80,7 +80,8 @@ var (
 
 func TestJaccardAlgorithm(t *testing.T) {
 	JaccardAlgorithm := algorithms.NewJaccardAlgorithm(mockCityRepo, mockRelationsRepo, mockStacksRepo)
-	recommendations, err := JaccardAlgorithm.Run(context.Background(), 123)
+	weights := []float64{0.5, 0.3, 0.2}
+	recommendations, err := JaccardAlgorithm.Run(context.Background(), weights, 123)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -101,7 +102,8 @@ func TestJaccardAlgorithm(t *testing.T) {
 
 func TestJaccardAlgorithm_RepositoryError(t *testing.T) {
 	JaccardAlgorithm := algorithms.NewJaccardAlgorithm(mockCityRepo, mockRelationsRepo, mockStacksRepo)
-	_, err := JaccardAlgorithm.Run(context.Background(), 999)
+	weights := []float64{0.5, 0.3, 0.2}
+	_, err := JaccardAlgorithm.Run(context.Background(), weights, 999)
 	if err == nil {
 		t.Fatalf("Expected error, got nil")
 	}
@@ -113,7 +115,8 @@ func TestJaccardAlgorithm_RepositoryError(t *testing.T) {
 
 func TestJaccardAlgorithm_RepositoryErrorCity(t *testing.T) {
 	JaccardAlgorithm := algorithms.NewJaccardAlgorithm(mockCityRepo, mockRelationsRepo, mockStacksRepo)
-	_, err := JaccardAlgorithm.Run(context.Background(), 997)
+	weights := []float64{0.5, 0.3, 0.2}
+	_, err := JaccardAlgorithm.Run(context.Background(), weights, 997)
 	if err == nil {
 		t.Fatalf("Expected error, got nil")
 	}
@@ -124,8 +127,9 @@ func TestJaccardAlgorithm_RepositoryErrorCity(t *testing.T) {
 }
 
 func TestJaccardAlgorithm_RepositoryErrorRelation(t *testing.T) {
+	weights := []float64{0.5, 0.3, 0.2}
 	JaccardAlgorithm := algorithms.NewJaccardAlgorithm(mockCityRepo, mockRelationsRepo, mockStacksRepo)
-	_, err := JaccardAlgorithm.Run(context.Background(), 998)
+	_, err := JaccardAlgorithm.Run(context.Background(), weights, 998)
 	if err == nil {
 		t.Fatalf("Expected error, got nil")
 	}
