@@ -13,7 +13,7 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=Kadeira4.0
       - KAFKA_SERVER=kafka:9092
-      - AUTH_URL=app:8080
+      - AUTH_URL=http://devconnect:8080
     depends_on:
       - neo4j
     networks:

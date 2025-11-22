@@ -4,6 +4,13 @@ import (
 	"context"
 )
 
+type IRelationService interface {
+	CreateRelation(ctx context.Context, relation Relation) (Relation, error)
+	GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]Relation, error)
+	AcceptRelation(ctx context.Context, fromId int64, toId int64) error
+	GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]Relation, error)
+}
+
 type RelationService struct {
 	repository RelationsRepository
 }

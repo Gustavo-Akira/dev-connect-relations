@@ -16,7 +16,7 @@ func TestGetProfile_Success(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// verify endpoint
-		if r.URL.Path != "/profile/me" {
+		if r.URL.Path != "/v1/dev-profiles/profile" {
 			t.Fatalf("unexpected path: %s", r.URL.Path)
 		}
 		// verify cookie

@@ -55,7 +55,7 @@ func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *profile.Pro
 func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) relation.RelationsRepository {
 	repo := relationRepository.NewNeo4jRelationRepository(driver)
 	relation_service := relation.CreateRelationService(repo)
-	relation_controller := relation_controller.CreateNewRelationsController(*relation_service)
+	relation_controller := relation_controller.CreateNewRelationsController(relation_service)
 	router.POST("/relation", relation_controller.CreateRelation)
 	router.GET("/relation/:fromId", relation_controller.GetAllRelationsByFromId)
 	router.PATCH("/relation/accept/:fromId/:toId", relation_controller.AcceptRelation)
@@ -111,6 +111,9 @@ func setRecommendation(router *gin.Engine, cityRelationRepo cityRelationDomain.C
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	router := gin.Default()
+	authClient := auth.NewAuthClient(os.Getenv("AUTH_URL"))
+	authMw := middlewares.NewAuthMiddleware(authClient)
+	router.Use(authMw.Handler())
 	dbUri := GetEnv("NEO4J_URI", "neo4j://localhost:7687")
 	dbUser := GetEnv("NEO4J_USER", "neo4j")
 	dbPassword := GetEnv("NEO4J_PASSWORD", "Kadeira4.0")
@@ -150,8 +153,6 @@ func main() {
 		cancel()
 		os.Exit(0)
 	}()
-	authClient := auth.NewAuthClient(os.Getenv("AUTH_URL"))
-	authMw := middlewares.NewAuthMiddleware(authClient)
-	router.Use(authMw.Handler())
+
 	router.Run(":8082")
 }

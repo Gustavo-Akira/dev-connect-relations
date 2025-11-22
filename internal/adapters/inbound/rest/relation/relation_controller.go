@@ -3,6 +3,7 @@ package relation_controller
 import (
 	relation_dto "devconnectrelations/internal/adapters/inbound/rest/relation/dto"
 	"devconnectrelations/internal/domain/profile_relation/relation"
+	"errors"
 
 	"net/http"
 	"strconv"
@@ -12,19 +13,31 @@ import (
 )
 
 type RelationController struct {
-	service *relation.RelationService
+	service relation.IRelationService
 }
 
-func CreateNewRelationsController(service relation.RelationService) *RelationController {
-	return &RelationController{service: &service}
+func CreateNewRelationsController(service relation.IRelationService) *RelationController {
+	return &RelationController{service: service}
 }
 
 func (c *RelationController) CreateRelation(ctx *gin.Context) {
 	var createDTO relation_dto.CreateRelationDTO
+
 	if err := ctx.ShouldBind(&createDTO); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	authError := CompareAndGetUserId(ctx, createDTO.FromId)
+	if authError != nil {
+		if authError.Error() == "Unauthorized" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})
+		} else {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": authError.Error()})
+		}
+		return
+	}
+
 	relation, formatError := relation.NewRelation(createDTO.FromId, createDTO.TargetId, relation.RelationType(strings.ToUpper(createDTO.RelationType)), relation.RelationStatusPending)
 	if formatError != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": formatError.Error()})
@@ -45,6 +58,15 @@ func (c *RelationController) GetAllRelationsByFromId(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
 		return
 	}
+	authError := CompareAndGetUserId(ctx, parsedInt)
+	if authError != nil {
+		if authError.Error() == "Unauthorized" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{"error": authError.Error()})
+		}
+		return
+	}
 	relations, err := c.service.GetAllRelationsByFromId(ctx, int64(parsedInt))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -58,6 +80,15 @@ func (c *RelationController) AcceptRelation(ctx *gin.Context) {
 	toId := ctx.Param("toId")
 	parsedFromId, parsedFromError := strconv.ParseInt(fromId, 10, 32)
 	parsedToId, parsedToError := strconv.ParseInt(toId, 10, 32)
+	authError := CompareAndGetUserId(ctx, parsedFromId)
+	if authError != nil {
+		if authError.Error() == "Unauthorized" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})
+		} else {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": authError.Error()})
+		}
+		return
+	}
 	if parsedFromError != nil || parsedToError != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid fromId or toId"})
 		return
@@ -72,9 +103,19 @@ func (c *RelationController) AcceptRelation(ctx *gin.Context) {
 
 func (c *RelationController) GetAllRelationPendingByFromId(ctx *gin.Context) {
 	fromId := ctx.Param("fromId")
+
 	parsedInt, parsedError := strconv.ParseInt(fromId, 10, 64)
 	if parsedError != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
+		return
+	}
+	authError := CompareAndGetUserId(ctx, parsedInt)
+	if authError != nil {
+		if authError.Error() == "Unauthorized" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})
+		} else {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": authError.Error()})
+		}
 		return
 	}
 	relations, err := c.service.GetAllRelationPendingByFromId(ctx, int64(parsedInt))
@@ -83,4 +124,18 @@ func (c *RelationController) GetAllRelationPendingByFromId(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"relations": relations})
+}
+
+func CompareAndGetUserId(ctx *gin.Context, comparedId int64) error {
+	userIDv, exists := ctx.Get("userId")
+
+	if !exists {
+		return errors.New("Unauthorized")
+	}
+	userId := *userIDv.(*int64)
+	if userId != comparedId {
+		return errors.New("Forbidden " + strconv.FormatInt(userId, 10) + " " + strconv.FormatInt(comparedId, 10))
+	}
+
+	return nil
 }

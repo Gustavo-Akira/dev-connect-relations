@@ -24,7 +24,7 @@ type ProfileMeResponse struct {
 }
 
 func (ac *AuthClient) GetProfile(token string) (*int64, error) {
-	req, err := http.NewRequest("GET", ac.baseURL+"/profile/me", nil)
+	req, err := http.NewRequest("GET", ac.baseURL+"/v1/dev-profiles/profile", nil)
 	if err != nil {
 		return nil, err
 	}

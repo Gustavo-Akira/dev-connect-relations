@@ -27,7 +27,7 @@ func (a *AuthMiddleware) Handler() gin.HandlerFunc {
 		token = strings.TrimPrefix(token, "")
 		user_id, err := a.Client.GetProfile(token)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			ctx.AbortWithStatusJSON(http.StatusOK, gin.H{"error": err.Error()})
 			return
 		}
 		ctx.Set("userId", user_id)
