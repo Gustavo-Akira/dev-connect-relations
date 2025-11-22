@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"devconnectrelations/internal/adapters/inbound/consumer/profile_created"
+	"devconnectrelations/internal/adapters/inbound/middlewares"
 	city_rest "devconnectrelations/internal/adapters/inbound/rest/city"
 	cityrelation "devconnectrelations/internal/adapters/inbound/rest/city_relation"
 	rest "devconnectrelations/internal/adapters/inbound/rest/profile"
@@ -10,6 +11,7 @@ import (
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
 	stack_rest "devconnectrelations/internal/adapters/inbound/rest/stack"
 	stack_relation_rest "devconnectrelations/internal/adapters/inbound/rest/stack_relation"
+	"devconnectrelations/internal/adapters/outbound/clients/auth"
 	cityRepository "devconnectrelations/internal/adapters/outbound/repository/city"
 	profileRepository "devconnectrelations/internal/adapters/outbound/repository/profile"
 	relationRepository "devconnectrelations/internal/adapters/outbound/repository/profile_relation"
@@ -148,5 +150,8 @@ func main() {
 		cancel()
 		os.Exit(0)
 	}()
+	authClient := auth.NewAuthClient(os.Getenv("AUTH_URL"))
+	authMw := middlewares.NewAuthMiddleware(authClient)
+	router.Use(authMw.Handler())
 	router.Run(":8082")
 }
