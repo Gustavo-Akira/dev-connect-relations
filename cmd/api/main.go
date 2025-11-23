@@ -29,6 +29,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -108,12 +109,24 @@ func setRecommendation(router *gin.Engine, cityRelationRepo cityRelationDomain.C
 	router.GET("/recommendations/:userId", recommendation_controller.GetRecommendations)
 }
 
+func setCors(router *gin.Engine) {
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:5173"}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	config.ExposeHeaders = []string{"Content-Length"}
+	config.AllowCredentials = true
+	router.Use(cors.New(config))
+}
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
+
 	router := gin.Default()
 	authClient := auth.NewAuthClient(os.Getenv("AUTH_URL"))
 	authMw := middlewares.NewAuthMiddleware(authClient)
 	router.Use(authMw.Handler())
+	setCors(router)
 	dbUri := GetEnv("NEO4J_URI", "neo4j://localhost:7687")
 	dbUser := GetEnv("NEO4J_USER", "neo4j")
 	dbPassword := GetEnv("NEO4J_PASSWORD", "Kadeira4.0")
