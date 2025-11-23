@@ -55,8 +55,14 @@ func TestGetRecommendations_ServiceError_Returns500(t *testing.T) {
 	}
 
 	rc := recommendation.NewRecommendationController(mock)
-
+	var userValue interface{}
+	userId := int64(123)
+	userValue = &userId
 	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("userId", userValue)
+		c.Next()
+	})
 	router.GET("/recommendations/:userId", rc.GetRecommendations)
 
 	req := httptest.NewRequest(http.MethodGet, "/recommendations/123", nil)
@@ -75,8 +81,8 @@ func TestGetRecommendations_Success_Returns200AndJSON(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	expected := []domainrec.Recommendation{
-		{ID: 1, Score: 0.9},
-		{ID: 2, Score: 0.5},
+		{ID: 1, Score: 0.9, Name: "Gustavo"},
+		{ID: 2, Score: 0.5, Name: "Akira"},
 	}
 	mock := &MockRecommendationService{
 		Result: expected,
@@ -84,8 +90,14 @@ func TestGetRecommendations_Success_Returns200AndJSON(t *testing.T) {
 	}
 
 	rc := recommendation.NewRecommendationController(mock)
-
+	var userValue interface{}
+	userId := int64(123)
+	userValue = &userId
 	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("userId", userValue)
+		c.Next()
+	})
 	router.GET("/recommendations/:userId", rc.GetRecommendations)
 
 	req := httptest.NewRequest(http.MethodGet, "/recommendations/123", nil)
@@ -106,5 +118,58 @@ func TestGetRecommendations_Success_Returns200AndJSON(t *testing.T) {
 	}
 	if got[0].ID != expected[0].ID || got[0].Score != expected[0].Score {
 		t.Fatalf("unexpected first recommendation: %+v", got[0])
+	}
+}
+
+func TestShouldReturnForbiddenWhenUserIdIsDifferentFromPassedId(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	expected := []domainrec.Recommendation{
+		{ID: 1, Score: 0.9, Name: "Gustavo"},
+		{ID: 2, Score: 0.5, Name: "Akira"},
+	}
+	mock := &MockRecommendationService{
+		Result: expected,
+		Err:    nil,
+	}
+	rc := recommendation.NewRecommendationController(mock)
+	var userValue interface{}
+	userId := int64(1234)
+	userValue = &userId
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("userId", userValue)
+		c.Next()
+	})
+	router.GET("/recommendations/:userId", rc.GetRecommendations)
+
+	req := httptest.NewRequest(http.MethodGet, "/recommendations/123", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected status 403, got %d, body: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestShouldReturnUnauthorizedWhenUserIdIsNotPresent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	expected := []domainrec.Recommendation{
+		{ID: 1, Score: 0.9, Name: "Gustavo"},
+		{ID: 2, Score: 0.5, Name: "Akira"},
+	}
+	mock := &MockRecommendationService{
+		Result: expected,
+		Err:    nil,
+	}
+	rc := recommendation.NewRecommendationController(mock)
+	router := gin.New()
+	router.GET("/recommendations/:userId", rc.GetRecommendations)
+
+	req := httptest.NewRequest(http.MethodGet, "/recommendations/123", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d, body: %s", rec.Code, rec.Body.String())
 	}
 }

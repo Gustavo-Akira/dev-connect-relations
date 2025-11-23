@@ -63,7 +63,8 @@ WITH p1,p2,stacks_p1,stacks_p2,
 (stacks_p1 + [x IN stacks_p2 WHERE NOT x IN stacks_p1]) as uni
 RETURN 
     p2.id AS recommended_profile,
-    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_stack
+    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_stack,
+	p2.name AS profile_name
 ORDER BY jaccard_stack DESC
 LIMIT 20`
 	result, err := neo4j.ExecuteQuery(ctx, r.driver, query, params, neo4j.EagerResultTransformer)
@@ -75,9 +76,11 @@ LIMIT 20`
 	for _, record := range records {
 		jaccardIndex := record.Values[1].(float64)
 		recommendedProfileID := record.Values[0].(int64)
+		name := record.Values[2].(string)
 		jaccardIndices = append(jaccardIndices, recommendation.Recommendation{
 			ID:    recommendedProfileID,
 			Score: jaccardIndex,
+			Name:  name,
 		})
 	}
 	return jaccardIndices, nil

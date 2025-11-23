@@ -58,7 +58,8 @@ WHERE SIZE(uni) > 0
 
 RETURN 
     p2.id AS recommended_profile,
-    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_city
+    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_city,
+	p2.name AS profile_name
 ORDER BY jaccard_city DESC
 LIMIT 20`
 	result, err := neo4j.ExecuteQuery(ctx, *r.driver, query, params, neo4j.EagerResultTransformer)
@@ -70,9 +71,11 @@ LIMIT 20`
 	for _, record := range records {
 		jaccardIndex := record.Values[1].(float64)
 		profileID := record.Values[0].(int64)
+		name := record.Values[2].(string)
 		jaccardInde := recommendation.Recommendation{
 			ID:    profileID,
 			Score: jaccardIndex,
+			Name:  name,
 		}
 		jaccardIndices = append(jaccardIndices, jaccardInde)
 	}

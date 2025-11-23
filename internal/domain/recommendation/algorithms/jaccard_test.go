@@ -18,8 +18,8 @@ func (m *MockCityRelationRepository) JaccardIndexByProfileId(ctx context.Context
 		return nil, errors.New("Error on repository")
 	}
 	return []recommendation.Recommendation{
-		{ID: 1, Score: 0.8},
-		{ID: 2, Score: 0.6},
+		{ID: 1, Score: 0.8, Name: "Gustavo"},
+		{ID: 2, Score: 0.6, Name: "Akira"},
 	}, nil
 }
 
@@ -34,8 +34,8 @@ func (m *MockRelationsRepository) JaccardIndexByProfileId(ctx context.Context, p
 		return nil, errors.New("Error on repository")
 	}
 	return []recommendation.Recommendation{
-		{ID: 1, Score: 0.7},
-		{ID: 2, Score: 0.5},
+		{ID: 1, Score: 0.7, Name: "Gustavo"},
+		{ID: 2, Score: 0.5, Name: "Akira"},
 	}, nil
 }
 
@@ -59,8 +59,8 @@ func (m *MockStackRelationRepository) JaccardIndexByProfileId(ctx context.Contex
 		return nil, errors.New("Error on repository")
 	}
 	return []recommendation.Recommendation{
-		{ID: 1, Score: 0.9},
-		{ID: 2, Score: 0.4},
+		{ID: 1, Score: 0.9, Name: "Gustavo"},
+		{ID: 2, Score: 0.4, Name: "Akira"},
 	}, nil
 }
 
@@ -89,13 +89,22 @@ func TestJaccardAlgorithm(t *testing.T) {
 		1: 0.5*0.8 + 0.3*0.9 + 0.2*0.7,
 		2: 0.5*0.6 + 0.3*0.4 + 0.2*0.5,
 	}
-	for _, rec := range recommendations {
+
+	expectedNames := []string{
+		"Gustavo",
+		"Akira",
+	}
+
+	for i, rec := range recommendations {
 		expectedScore, exists := expectedScores[rec.ID]
 		if !exists {
 			t.Errorf("Unexpected recommendation ID %d", rec.ID)
 		}
 		if rec.Score != expectedScore {
 			t.Errorf("For ID %d, expected score %f, got %f", rec.ID, expectedScore, rec.Score)
+		}
+		if expectedNames[i] != recommendations[i].Name {
+			t.Error("Name arent compatible")
 		}
 	}
 }

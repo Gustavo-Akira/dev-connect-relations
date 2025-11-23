@@ -131,7 +131,8 @@ WHERE SIZE(uni) > 0
 
 RETURN 
     p3.id AS recommended_profile,
-    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_friend
+    (SIZE(inter) * 1.0 / SIZE(uni)) AS jaccard_friend,
+	p3.name AS profile_name
 ORDER BY jaccard_friend DESC
 LIMIT 20`
 
@@ -146,9 +147,11 @@ LIMIT 20`
 	for _, record := range records {
 		jaccardIndex := record.Values[1].(float64)
 		recommendedProfileID := record.Values[0].(int64)
+		name := record.Values[2].(string)
 		jaccardInde := recommendation.Recommendation{
 			ID:    recommendedProfileID,
 			Score: jaccardIndex,
+			Name:  name,
 		}
 		jaccardIndices = append(jaccardIndices, jaccardInde)
 	}

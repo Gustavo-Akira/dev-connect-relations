@@ -11,6 +11,7 @@ func TestCreateRelation(t *testing.T) {
 }
 
 func TestProfileJaccardIndexByProfileId(t *testing.T) {
+	tests.SeedRelations(t, driver)
 	repo := relation_repo.NewNeo4jRelationRepository(driver)
 	reccomendations, err := repo.JaccardIndexByProfileId(t.Context(), 1)
 	if err != nil {

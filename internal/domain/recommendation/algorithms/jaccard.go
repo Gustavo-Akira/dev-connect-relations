@@ -15,6 +15,11 @@ type JaccardAlgorithm struct {
 	StacksRelationRepository stack.StackRelationRepository
 }
 
+type NameAndScore struct {
+	Name  string
+	Score float64
+}
+
 func NewJaccardAlgorithm(
 	cityRepo city.CityRelationRepository,
 	relationsRepo relation.RelationsRepository,
@@ -48,12 +53,15 @@ func (ja *JaccardAlgorithm) Run(ctx context.Context, weights []float64, profileI
 }
 
 func combineScores(weights []float64, scoreSets ...[]recommendation.Recommendation) []recommendation.Recommendation {
-	combined := make(map[int64]float64)
+	combined := make(map[int64]NameAndScore)
 
 	for i, set := range scoreSets {
 		weight := weights[i]
 		for _, s := range set {
-			combined[s.ID] += (s.Score * weight)
+			combined[s.ID] = NameAndScore{
+				Score: combined[s.ID].Score + (s.Score * weight),
+				Name:  s.Name,
+			}
 		}
 	}
 
@@ -61,7 +69,8 @@ func combineScores(weights []float64, scoreSets ...[]recommendation.Recommendati
 	for id, score := range combined {
 		result = append(result, recommendation.Recommendation{
 			ID:    id,
-			Score: score,
+			Score: score.Score,
+			Name:  score.Name,
 		})
 	}
 

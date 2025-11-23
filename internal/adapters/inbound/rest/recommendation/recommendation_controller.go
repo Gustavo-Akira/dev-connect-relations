@@ -24,6 +24,18 @@ func (rc *RecommendationController) GetRecommendations(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"error": "invalid user ID"})
 		return
 	}
+
+	userIDv, exists := ctx.Get("userId")
+
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if *userIDv.(*int64) != userIDInt64 {
+		ctx.JSON(403, gin.H{"error": "Forbidden"})
+		return
+	}
+
 	recommendations, recommendationError := rc.service.GetRecommendationByProfileId(ctx, int64(userIDInt64))
 
 	if recommendationError != nil {
