@@ -45,3 +45,30 @@ func TestJaccardIndexByProfileId(t *testing.T) {
 	}
 
 }
+
+func TestGetCityRelatedToProfileId(t *testing.T) {
+	t.Parallel()
+
+	tests.SeedProfiles(t, driver)
+	tests.SeedCityRelationships(t, driver)
+
+	repo := relation.NewNeo4jRelationCityRepository(&driver)
+
+	cities, err := repo.GetCityRelatedToProfileId(t.Context(), 1)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(cities) == 0 {
+		t.Fatalf("expected at least one city relation, got 0")
+	}
+
+	for _, c := range cities {
+		if c.ProfileID != 1 {
+			t.Errorf("expected ProfileID to be 1, got %d", c.ProfileID)
+		}
+		if c.CityFullName == "" {
+			t.Errorf("expected CityFullName not to be empty")
+		}
+	}
+}

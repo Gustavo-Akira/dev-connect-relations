@@ -27,6 +27,10 @@ func (m *MockCityRelationRepository) CreateCityRelation(ctx context.Context, cit
 	return nil, nil
 }
 
+func (m *MockCityRelationRepository) GetCityRelatedToProfileId(ctx context.Context, profileId int64) ([]city.CityRelation, error) {
+	return nil, nil
+}
+
 type MockRelationsRepository struct{}
 
 func (m *MockRelationsRepository) JaccardIndexByProfileId(ctx context.Context, profileId int64) ([]recommendation.Recommendation, error) {
