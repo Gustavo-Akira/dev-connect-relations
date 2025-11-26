@@ -76,6 +76,10 @@ func (m *MockStackRelationRepository) DeleteStackRelation(ctx context.Context, s
 	return nil
 }
 
+func (m *MockStackRelationRepository) GetStackRelationByProfileId(ctx context.Context, profileId int64) ([]stack.StackRelation, error) {
+	return nil, nil
+}
+
 var (
 	mockCityRepo      = &MockCityRelationRepository{}
 	mockRelationsRepo = &MockRelationsRepository{}

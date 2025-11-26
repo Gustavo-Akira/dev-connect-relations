@@ -22,7 +22,6 @@ func (r *Neo4JStackRelationRepository) CreateStackRelation(ctx context.Context, 
 		"stackName": stackRelation.StackName,
 		"profileID": stackRelation.ProfileID,
 	}
-	// retornamos a relação criada para validar
 	st, err := neo4j.ExecuteQuery(ctx, r.driver,
 		`MATCH (s:Stack {name: $stackName}), (p:Profile {id: $profileID})
          MERGE (p)-[r:USES]->(s)
@@ -33,6 +32,24 @@ func (r *Neo4JStackRelationRepository) CreateStackRelation(ctx context.Context, 
 		return nil, err
 	}
 	return stackRelation, nil
+}
+func (r *Neo4JStackRelationRepository) GetStackRelationByProfileId(ctx context.Context, profileId int64) ([]stack.StackRelation, error) {
+	st, err := neo4j.ExecuteQuery(ctx, r.driver, `MATCH (p:Profile {id:$id}) -[r:USES]->(s:Stack) RETURN s.name`, map[string]any{"id": profileId}, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+
+	records := st.Records
+	result := make([]stack.StackRelation, 0)
+	for _, record := range records {
+		name := record.Values[0].(string)
+		relation := stack.StackRelation{
+			StackName: name,
+			ProfileID: profileId,
+		}
+		result = append(result, relation)
+	}
+	return result, nil
 }
 
 func (r *Neo4JStackRelationRepository) DeleteStackRelation(ctx context.Context, stackName string, profileID int64) error {
