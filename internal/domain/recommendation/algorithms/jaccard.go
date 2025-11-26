@@ -48,6 +48,50 @@ func (ja *JaccardAlgorithm) Run(ctx context.Context, weights []float64, profileI
 	}
 
 	final := combineScores(weights, city_score, stack_score, relation_score)
+	final, finalError := ja.enrichRecommendations(ctx, final)
+	if finalError != nil {
+		return nil, finalError
+	}
+	return final, nil
+}
+
+func (ja *JaccardAlgorithm) enrichRecommendations(
+	ctx context.Context,
+	combined []recommendation.Recommendation,
+) ([]recommendation.Recommendation, error) {
+
+	// Extrai os IDs de todos os perfis recomendados
+	ids := make([]int64, 0, len(combined))
+	for _, rec := range combined {
+		ids = append(ids, rec.ID)
+	}
+
+	cityMap, err := ja.CityRelationRepository.GetCityRelatedToProfileIds(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	stackMap, err := ja.StacksRelationRepository.GetStackRelationByProfileIds(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	final := make([]recommendation.Recommendation, 0, len(combined))
+	for _, rec := range combined {
+
+		cityName := cityMap[rec.ID]
+		stacks := stackMap[rec.ID]
+
+		finalRec := recommendation.Recommendation{
+			ID:       rec.ID,
+			Name:     rec.Name,
+			Score:    rec.Score,
+			CityName: cityName,
+			Stacks:   stacks,
+		}
+
+		final = append(final, finalRec)
+	}
 
 	return final, nil
 }

@@ -72,3 +72,27 @@ func TestGetCityRelatedToProfileId(t *testing.T) {
 		}
 	}
 }
+
+func TestGetCityRelatedToProfileIds(t *testing.T) {
+	t.Parallel()
+
+	tests.SeedProfiles(t, driver)
+	tests.SeedCityRelationships(t, driver)
+
+	repo := relation.NewNeo4jRelationCityRepository(&driver)
+
+	cities, err := repo.GetCityRelatedToProfileIds(t.Context(), []int64{1, 2})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(cities) == 0 {
+		t.Fatalf("expected at least one city relation, got 0")
+	}
+
+	for _, c := range cities {
+		if c == "" {
+			t.Errorf("expected CityFullName not to be empty")
+		}
+	}
+}

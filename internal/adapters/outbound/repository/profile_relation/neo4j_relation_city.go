@@ -48,6 +48,21 @@ func (r *Neo4jRelationCityRepository) GetCityRelatedToProfileId(ctx context.Cont
 	return results, nil
 }
 
+func (r *Neo4jRelationCityRepository) GetCityRelatedToProfileIds(ctx context.Context, profileIds []int64) (map[int64]string, error) {
+	result, err := neo4j.ExecuteQuery(ctx, *r.driver, `MATCH (p:Profile)-[:LIVES_IN]->(c:City)
+WHERE p.id IN $ids
+RETURN p.id AS profileId, c.full_name AS city`, map[string]any{"ids": profileIds}, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+	records := result.Records
+	results := make(map[int64]string, 0)
+	for _, record := range records {
+		results[record.Values[0].(int64)] = record.Values[1].(string)
+	}
+	return results, nil
+}
+
 func (r *Neo4jRelationCityRepository) JaccardIndexByProfileId(ctx context.Context, profileID int64) ([]recommendation.Recommendation, error) {
 	params := map[string]any{
 		"id": profileID,

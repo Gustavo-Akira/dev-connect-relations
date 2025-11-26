@@ -31,11 +31,29 @@ func (m *MockCityRelationRepository) GetCityRelatedToProfileId(ctx context.Conte
 	return nil, nil
 }
 
+func (m *MockCityRelationRepository) GetCityRelatedToProfileIds(ctx context.Context, profileIds []int64) (map[int64]string, error) {
+	for _, id := range profileIds {
+		if id == 775 {
+			return nil, errors.New("Error on repository city batch")
+		}
+	}
+
+	return map[int64]string{
+		1: "Mogi das Cruzes",
+		2: "São Paulo",
+	}, nil
+}
+
 type MockRelationsRepository struct{}
 
 func (m *MockRelationsRepository) JaccardIndexByProfileId(ctx context.Context, profileId int64) ([]recommendation.Recommendation, error) {
 	if profileId == 998 {
 		return nil, errors.New("Error on repository")
+	}
+	if profileId == 666 {
+		return []recommendation.Recommendation{
+			{ID: 775, Score: 1, Name: "Errro"},
+		}, nil
 	}
 	return []recommendation.Recommendation{
 		{ID: 1, Score: 0.7, Name: "Gustavo"},
@@ -62,9 +80,30 @@ func (m *MockStackRelationRepository) JaccardIndexByProfileId(ctx context.Contex
 	if profileId == 999 {
 		return nil, errors.New("Error on repository")
 	}
+
+	if profileId == 777 {
+		return []recommendation.Recommendation{
+			{ID: 776, Score: 1, Name: "Errro"},
+		}, nil
+	}
 	return []recommendation.Recommendation{
 		{ID: 1, Score: 0.9, Name: "Gustavo"},
 		{ID: 2, Score: 0.4, Name: "Akira"},
+	}, nil
+}
+
+func (m *MockStackRelationRepository) GetStackRelationByProfileIds(ctx context.Context, profileIds []int64) (map[int64][]string, error) {
+
+	for _, id := range profileIds {
+		if id == 776 {
+			return nil, errors.New("Error on repository stacks")
+		}
+	}
+
+	// Mock fixo
+	return map[int64][]string{
+		1: {"Go", "React"},
+		2: {"Python"},
 	}, nil
 }
 
@@ -89,30 +128,30 @@ var (
 func TestJaccardAlgorithm(t *testing.T) {
 	JaccardAlgorithm := algorithms.NewJaccardAlgorithm(mockCityRepo, mockRelationsRepo, mockStacksRepo)
 	weights := []float64{0.5, 0.3, 0.2}
-	recommendations, err := JaccardAlgorithm.Run(context.Background(), weights, 123)
+
+	recs, err := JaccardAlgorithm.Run(context.Background(), weights, 123)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
+
 	expectedScores := map[int64]float64{
 		1: 0.5*0.8 + 0.3*0.9 + 0.2*0.7,
 		2: 0.5*0.6 + 0.3*0.4 + 0.2*0.5,
 	}
 
-	expectedNames := []string{
-		"Gustavo",
-		"Akira",
+	if len(recs) != 2 {
+		t.Fatalf("Expected 2 recommendations, got %d", len(recs))
 	}
 
-	for i, rec := range recommendations {
-		expectedScore, exists := expectedScores[rec.ID]
-		if !exists {
-			t.Errorf("Unexpected recommendation ID %d", rec.ID)
-		}
+	// Ordenação já vem por score
+	if recs[0].ID != 1 || recs[0].Name != "Gustavo" {
+		t.Errorf("Expected first recommendation to be Gustavo with ID 1")
+	}
+
+	for _, rec := range recs {
+		expectedScore := expectedScores[rec.ID]
 		if rec.Score != expectedScore {
-			t.Errorf("For ID %d, expected score %f, got %f", rec.ID, expectedScore, rec.Score)
-		}
-		if expectedNames[i] != recommendations[i].Name {
-			t.Error("Name arent compatible")
+			t.Errorf("For ID %d expected score %.2f got %.2f", rec.ID, expectedScore, rec.Score)
 		}
 	}
 }
@@ -127,6 +166,41 @@ func TestJaccardAlgorithm_RepositoryError(t *testing.T) {
 	expectedErrorMessage := "Error on repository"
 	if err.Error() != expectedErrorMessage {
 		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, err.Error())
+	}
+}
+
+func TestJaccardAlgorithm_RepositoryErrorStackBatch(t *testing.T) {
+	mockStackWithError := &MockStackRelationRepository{}
+
+	JaccardAlgorithm := algorithms.NewJaccardAlgorithm(mockCityRepo, mockRelationsRepo, mockStackWithError)
+	weights := []float64{0.5, 0.3, 0.2}
+
+	_, err := JaccardAlgorithm.Run(context.Background(), weights, 777)
+
+	if err == nil {
+		t.Fatalf("Expected error, got nil")
+	}
+
+	expected := "Error on repository stacks"
+	if err.Error() != expected {
+		t.Fatalf("Expected '%s', got '%s'", expected, err.Error())
+	}
+}
+
+func TestJaccardAlgorithm_RepositoryErrorCityBatch(t *testing.T) {
+	mockCity := &MockCityRelationRepository{}
+
+	JaccardAlgorithm := algorithms.NewJaccardAlgorithm(mockCity, mockRelationsRepo, mockStacksRepo)
+	weights := []float64{0.5, 0.3, 0.2}
+
+	_, err := JaccardAlgorithm.Run(context.Background(), weights, 666)
+	if err == nil {
+		t.Fatalf("Expected error, got nil")
+	}
+
+	expected := "Error on repository city batch"
+	if err.Error() != expected {
+		t.Fatalf("Expected '%s', got '%s'", expected, err.Error())
 	}
 }
 

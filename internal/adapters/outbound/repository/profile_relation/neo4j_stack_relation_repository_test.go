@@ -49,3 +49,27 @@ func TestGetStackRelationByProfileId(t *testing.T) {
 		}
 	}
 }
+
+func TestGetStackRelationByProfileIds(t *testing.T) {
+	t.Parallel()
+
+	tests.SeedProfiles(t, driver)
+	tests.SeedStackRelationships(t, driver)
+
+	repo := relation.NewNeo4jStackRelationRepository(driver)
+
+	relations, err := repo.GetStackRelationByProfileIds(t.Context(), []int64{1, 2})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(relations) == 0 {
+		t.Fatalf("expected at least one stack relation, got 0")
+	}
+
+	for _, r := range relations {
+		if r[0] == "" {
+			t.Errorf("expected StackName not to be empty")
+		}
+	}
+}

@@ -52,6 +52,25 @@ func (r *Neo4JStackRelationRepository) GetStackRelationByProfileId(ctx context.C
 	return result, nil
 }
 
+func (r *Neo4JStackRelationRepository) GetStackRelationByProfileIds(ctx context.Context, profileIds []int64) (map[int64][]string, error) {
+	st, err := neo4j.ExecuteQuery(ctx, r.driver, `MATCH (p:Profile) -[r:USES]->(s:Stack) WHERE p.id IN $ids RETURN s.name, p.id`, map[string]any{"ids": profileIds}, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+
+	records := st.Records
+	result := make(map[int64][]string, 0)
+	for _, record := range records {
+		name := record.Values[0].(string)
+		relation := stack.StackRelation{
+			StackName: name,
+			ProfileID: record.Values[1].(int64),
+		}
+		result[relation.ProfileID] = append(result[relation.ProfileID], relation.StackName)
+	}
+	return result, nil
+}
+
 func (r *Neo4JStackRelationRepository) DeleteStackRelation(ctx context.Context, stackName string, profileID int64) error {
 	params := map[string]any{
 		"stackName": stackName,
