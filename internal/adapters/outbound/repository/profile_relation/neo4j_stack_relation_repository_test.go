@@ -68,7 +68,7 @@ func TestGetStackRelationByProfileIds(t *testing.T) {
 	}
 
 	for _, r := range relations {
-		if r[0] == "" {
+		if r.StackName == "" {
 			t.Errorf("expected StackName not to be empty")
 		}
 	}

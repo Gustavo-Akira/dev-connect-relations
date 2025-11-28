@@ -48,7 +48,7 @@ func (r *Neo4jRelationCityRepository) GetCityRelatedToProfileId(ctx context.Cont
 	return results, nil
 }
 
-func (r *Neo4jRelationCityRepository) GetCityRelatedToProfileIds(ctx context.Context, profileIds []int64) (map[int64]string, error) {
+func (r *Neo4jRelationCityRepository) GetCityRelatedToProfileIds(ctx context.Context, profileIds []int64) ([]city.CityRelation, error) {
 	result, err := neo4j.ExecuteQuery(ctx, *r.driver, `MATCH (p:Profile)-[:LIVES_IN]->(c:City)
 WHERE p.id IN $ids
 RETURN p.id AS profileId, c.full_name AS city`, map[string]any{"ids": profileIds}, neo4j.EagerResultTransformer)
@@ -56,9 +56,13 @@ RETURN p.id AS profileId, c.full_name AS city`, map[string]any{"ids": profileIds
 		return nil, err
 	}
 	records := result.Records
-	results := make(map[int64]string, 0)
+	results := make([]city.CityRelation, 0)
 	for _, record := range records {
-		results[record.Values[0].(int64)] = record.Values[1].(string)
+		relation := city.CityRelation{
+			CityFullName: record.Values[1].(string),
+			ProfileID:    record.Values[0].(int64),
+		}
+		results = append(results, relation)
 	}
 	return results, nil
 }

@@ -5,5 +5,5 @@ import (
 )
 
 type RecommendationAlgorithm interface {
-	Run(ctx context.Context, weights []float64, profileId int64) ([]Recommendation, error)
+	Run(ctx context.Context, weights []float64, profileId int64) ([]AggregatedScore, error)
 }

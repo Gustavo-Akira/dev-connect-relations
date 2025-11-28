@@ -102,8 +102,10 @@ func setCityRelation(router *gin.Engine, driver neo4j.DriverWithContext, citySer
 
 func setRecommendation(router *gin.Engine, cityRelationRepo cityRelationDomain.CityRelationRepository, stackRelationRepo stackRelationDomain.StackRelationRepository, profileRelationRepo relation.RelationsRepository) {
 	algorithm := algorithms.NewJaccardAlgorithm(cityRelationRepo, profileRelationRepo, stackRelationRepo)
+	readModel := relationRepository.CreateNeo4jRecommendationRepository(cityRelationRepo, stackRelationRepo)
 	recommendation_service := recommendation.RecommendationService{
 		RecommendationAlgorithm: algorithm,
+		Read:                    readModel,
 	}
 	recommendation_controller := recommendationController.NewRecommendationController(&recommendation_service)
 	router.GET("/recommendations/:userId", recommendation_controller.GetRecommendations)

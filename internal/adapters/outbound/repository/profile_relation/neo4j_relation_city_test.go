@@ -91,7 +91,7 @@ func TestGetCityRelatedToProfileIds(t *testing.T) {
 	}
 
 	for _, c := range cities {
-		if c == "" {
+		if c.CityFullName == "" {
 			t.Errorf("expected CityFullName not to be empty")
 		}
 	}

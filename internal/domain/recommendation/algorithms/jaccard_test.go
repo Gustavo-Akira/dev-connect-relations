@@ -31,17 +31,8 @@ func (m *MockCityRelationRepository) GetCityRelatedToProfileId(ctx context.Conte
 	return nil, nil
 }
 
-func (m *MockCityRelationRepository) GetCityRelatedToProfileIds(ctx context.Context, profileIds []int64) (map[int64]string, error) {
-	for _, id := range profileIds {
-		if id == 775 {
-			return nil, errors.New("Error on repository city batch")
-		}
-	}
-
-	return map[int64]string{
-		1: "Mogi das Cruzes",
-		2: "São Paulo",
-	}, nil
+func (m *MockCityRelationRepository) GetCityRelatedToProfileIds(ctx context.Context, profileIds []int64) ([]city.CityRelation, error) {
+	return nil, nil
 }
 
 type MockRelationsRepository struct{}
@@ -92,19 +83,8 @@ func (m *MockStackRelationRepository) JaccardIndexByProfileId(ctx context.Contex
 	}, nil
 }
 
-func (m *MockStackRelationRepository) GetStackRelationByProfileIds(ctx context.Context, profileIds []int64) (map[int64][]string, error) {
-
-	for _, id := range profileIds {
-		if id == 776 {
-			return nil, errors.New("Error on repository stacks")
-		}
-	}
-
-	// Mock fixo
-	return map[int64][]string{
-		1: {"Go", "React"},
-		2: {"Python"},
-	}, nil
+func (m *MockStackRelationRepository) GetStackRelationByProfileIds(ctx context.Context, profileIds []int64) ([]stack.StackRelation, error) {
+	return nil, nil
 }
 
 func (m *MockStackRelationRepository) CreateStackRelation(ctx context.Context, stackRelation *stack.StackRelation) (*stack.StackRelation, error) {
@@ -143,7 +123,6 @@ func TestJaccardAlgorithm(t *testing.T) {
 		t.Fatalf("Expected 2 recommendations, got %d", len(recs))
 	}
 
-	// Ordenação já vem por score
 	if recs[0].ID != 1 || recs[0].Name != "Gustavo" {
 		t.Errorf("Expected first recommendation to be Gustavo with ID 1")
 	}

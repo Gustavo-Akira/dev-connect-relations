@@ -16,11 +16,11 @@ import (
 )
 
 type MockRecommendationService struct {
-	Result []domainrec.Recommendation
+	Result []domainrec.RecommendationReadModel
 	Err    error
 }
 
-func (m *MockRecommendationService) GetRecommendationByProfileId(ctx context.Context, profileId int64) ([]domainrec.Recommendation, error) {
+func (m *MockRecommendationService) GetRecommendationByProfileId(ctx context.Context, profileId int64) ([]domainrec.RecommendationReadModel, error) {
 	return m.Result, m.Err
 }
 
@@ -80,7 +80,7 @@ func TestGetRecommendations_ServiceError_Returns500(t *testing.T) {
 func TestGetRecommendations_Success_Returns200AndJSON(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	expected := []domainrec.Recommendation{
+	expected := []domainrec.RecommendationReadModel{
 		{ID: 1, Score: 0.9, Name: "Gustavo"},
 		{ID: 2, Score: 0.5, Name: "Akira"},
 	}
@@ -124,7 +124,7 @@ func TestGetRecommendations_Success_Returns200AndJSON(t *testing.T) {
 func TestShouldReturnForbiddenWhenUserIdIsDifferentFromPassedId(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	expected := []domainrec.Recommendation{
+	expected := []domainrec.RecommendationReadModel{
 		{ID: 1, Score: 0.9, Name: "Gustavo"},
 		{ID: 2, Score: 0.5, Name: "Akira"},
 	}
@@ -154,7 +154,7 @@ func TestShouldReturnForbiddenWhenUserIdIsDifferentFromPassedId(t *testing.T) {
 func TestShouldReturnUnauthorizedWhenUserIdIsNotPresent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	expected := []domainrec.Recommendation{
+	expected := []domainrec.RecommendationReadModel{
 		{ID: 1, Score: 0.9, Name: "Gustavo"},
 		{ID: 2, Score: 0.5, Name: "Akira"},
 	}

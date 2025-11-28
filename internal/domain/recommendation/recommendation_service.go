@@ -5,18 +5,19 @@ import (
 )
 
 type IRecommendationService interface {
-	GetRecommendationByProfileId(ctx context.Context, profileID int64) ([]Recommendation, error)
+	GetRecommendationByProfileId(ctx context.Context, profileID int64) ([]RecommendationReadModel, error)
 }
 
 type RecommendationService struct {
 	RecommendationAlgorithm RecommendationAlgorithm
+	Read                    ReadModelRepository
 }
 
-func (recommendation_service *RecommendationService) GetRecommendationByProfileId(ctx context.Context, profileID int64) ([]Recommendation, error) {
+func (recommendation_service *RecommendationService) GetRecommendationByProfileId(ctx context.Context, profileID int64) ([]RecommendationReadModel, error) {
 	weights := []float64{0.5, 0.3, 0.2}
-	recommendations, err := recommendation_service.RecommendationAlgorithm.Run(ctx, weights, profileID)
+	scores, err := recommendation_service.RecommendationAlgorithm.Run(ctx, weights, profileID)
 	if err != nil {
 		return nil, err
 	}
-	return recommendations, nil
+	return recommendation_service.Read.EnrichRecommendations(ctx, scores)
 }

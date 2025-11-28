@@ -9,11 +9,11 @@ import (
 
 type MockRecommendationAlgorithm struct{}
 
-func (m *MockRecommendationAlgorithm) Run(ctx context.Context, weights []float64, profileId int64) ([]recommendation.Recommendation, error) {
+func (m *MockRecommendationAlgorithm) Run(ctx context.Context, weights []float64, profileId int64) ([]recommendation.AggregatedScore, error) {
 	if profileId == 0 {
-		return []recommendation.Recommendation{}, errors.New("invalid profile ID")
+		return []recommendation.AggregatedScore{}, errors.New("invalid profile ID")
 	}
-	return []recommendation.Recommendation{
+	return []recommendation.AggregatedScore{
 		{ID: 2, Score: 0.8},
 		{ID: 3, Score: 0.6},
 	}, nil
