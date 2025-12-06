@@ -18,10 +18,12 @@ const (
 )
 
 type Relation struct {
-	FromID int64
-	ToID   int64
-	Type   RelationType
-	Status RelationStatus
+	FromID          int64
+	FromProfileName string
+	ToID            int64
+	ToProfileName   string
+	Type            RelationType
+	Status          RelationStatus
 }
 
 func NewRelation(fromID int64, toID int64, relationType RelationType, status RelationStatus) (*Relation, error) {

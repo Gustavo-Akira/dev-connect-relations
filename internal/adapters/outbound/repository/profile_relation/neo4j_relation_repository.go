@@ -36,7 +36,7 @@ func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, f
 	params := map[string]any{
 		"fromId": fromId,
 	}
-	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId})-[r:Relation]-(toPerson:Profile) RETURN r, toPerson", params, neo4j.EagerResultTransformer)
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId})-[r:Relation]-(toPerson:Profile) RETURN r, toPerson, fromPerson", params, neo4j.EagerResultTransformer)
 	if err != nil {
 		return nil, err
 	}
@@ -45,13 +45,17 @@ func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, f
 	for _, record := range result.Records {
 		relationNode, _ := record.Get("r")
 		toPersonNode, _ := record.Get("toPerson")
+		fromPersonNode, _ := record.Get("fromPerson")
+		fromPersonProps := fromPersonNode.(neo4j.Node).Props
 		relationProps := relationNode.(neo4j.Relationship).Props
 		toPersonProps := toPersonNode.(neo4j.Node).Props
 		relation := domain.Relation{
-			FromID: fromId,
-			ToID:   toPersonProps["id"].(int64),
-			Type:   domain.RelationType(relationProps["type"].(string)),
-			Status: domain.RelationStatus(relationProps["status"].(string)),
+			FromID:          fromId,
+			FromProfileName: fromPersonProps["name"].(string),
+			ToID:            toPersonProps["id"].(int64),
+			ToProfileName:   toPersonProps["name"].(string),
+			Type:            domain.RelationType(relationProps["type"].(string)),
+			Status:          domain.RelationStatus(relationProps["status"].(string)),
 		}
 		relations = append(relations, relation)
 	}
@@ -80,7 +84,7 @@ func (r *Neo4jRelationRepository) GetAllRelationPendingByFromId(ctx context.Cont
 	params := map[string]any{
 		"fromId": fromId,
 	}
-	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile)-[r:Relation {status: 'PENDING'}]->(toPerson:Profile{id: $fromId}) RETURN r, fromPerson", params, neo4j.EagerResultTransformer)
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile)-[r:Relation {status: 'PENDING'}]->(toPerson:Profile{id: $fromId}) RETURN r, fromPerson, toPerson", params, neo4j.EagerResultTransformer)
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +93,17 @@ func (r *Neo4jRelationRepository) GetAllRelationPendingByFromId(ctx context.Cont
 	for _, record := range result.Records {
 		relationNode, _ := record.Get("r")
 		fromPersonNode, _ := record.Get("fromPerson")
+		toPersonNode, _ := record.Get("toPerson")
 		relationProps := relationNode.(neo4j.Relationship).Props
 		fromPersonProps := fromPersonNode.(neo4j.Node).Props
+		toPersonProps := toPersonNode.(neo4j.Node).Props
 		relation := domain.Relation{
-			FromID: fromPersonProps["id"].(int64),
-			ToID:   fromId,
-			Type:   domain.RelationType(relationProps["type"].(string)),
-			Status: domain.RelationStatus(relationProps["status"].(string)),
+			FromID:          fromPersonProps["id"].(int64),
+			FromProfileName: fromPersonProps["name"].(string),
+			ToID:            fromId,
+			ToProfileName:   toPersonProps["name"].(string),
+			Type:            domain.RelationType(relationProps["type"].(string)),
+			Status:          domain.RelationStatus(relationProps["status"].(string)),
 		}
 		relations = append(relations, relation)
 	}
