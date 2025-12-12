@@ -3,12 +3,14 @@ package relation_controller_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	relation_controller "devconnectrelations/internal/adapters/inbound/rest/relation"
+	usecases "devconnectrelations/internal/application/relations"
 	domainrelation "devconnectrelations/internal/domain/profile_relation/relation"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +30,7 @@ func (m *mockRelationService) CreateRelation(ctx context.Context, r domainrelati
 	return m.Created, m.CreateErr
 }
 
-func (m *mockRelationService) GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]domainrelation.Relation, error) {
+func (m *mockRelationService) GetAllRelationsByFromId(ctx context.Context, fromId int64, page int64) ([]domainrelation.Relation, error) {
 	return m.AllRelations, m.AllErr
 }
 
@@ -40,7 +42,16 @@ func (m *mockRelationService) GetAllRelationPendingByFromId(ctx context.Context,
 	return m.PendingRelations, m.PendingErr
 }
 
-func setupRouterWithService(svc domainrelation.IRelationService, setUser bool, userValue interface{}) *gin.Engine {
+type mockGetRelationsUseCase struct {
+	result usecases.GetRelationsPagedOutput
+	err    error
+}
+
+func (m *mockGetRelationsUseCase) Execute(ctx context.Context, input usecases.GetRelationsPagedInput) (*usecases.GetRelationsPagedOutput, error) {
+	return &m.result, m.err
+}
+
+func setupRouterWithService(svc domainrelation.IRelationService, useCase usecases.IGetRelationsPaged, setUser bool, userValue interface{}) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	if setUser {
@@ -49,7 +60,8 @@ func setupRouterWithService(svc domainrelation.IRelationService, setUser bool, u
 			c.Next()
 		})
 	}
-	ctrl := relation_controller.CreateNewRelationsController(svc)
+	ctrl := relation_controller.CreateNewRelationsController(svc, useCase)
+
 	r.POST("/relation", ctrl.CreateRelation)
 	r.GET("/relations/:fromId", ctrl.GetAllRelationsByFromId)
 	r.PUT("/relations/:fromId/:toId/accept", ctrl.AcceptRelation)
@@ -60,9 +72,8 @@ func setupRouterWithService(svc domainrelation.IRelationService, setUser bool, u
 func TestCreateRelation_BadRequestOnBind(t *testing.T) {
 	mock := &mockRelationService{}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, false, nil)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, false, nil)
 
-	// send invalid JSON
 	req := httptest.NewRequest(http.MethodPost, "/relation", strings.NewReader("not-json"))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -76,7 +87,7 @@ func TestCreateRelation_BadRequestOnBind(t *testing.T) {
 func TestCreateRelation_UnauthorizedWhenNoUser(t *testing.T) {
 	mock := &mockRelationService{}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, false, nil)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, false, nil)
 
 	body := `{"fromId":1,"targetId":2,"relationType":"BLOCK"}`
 	req := httptest.NewRequest(http.MethodPost, "/relation", strings.NewReader(body))
@@ -92,7 +103,8 @@ func TestCreateRelation_UnauthorizedWhenNoUser(t *testing.T) {
 func TestCreateRelation_ForbiddenWhenUserPresentButMismatch(t *testing.T) {
 	mock := &mockRelationService{}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, true, int64(999))
+	userId := int64(999)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, true, &userId)
 
 	body := `{"fromId":1,"targetId":2,"relationType":"BLOCK"}`
 	req := httptest.NewRequest(http.MethodPost, "/relation", strings.NewReader(body))
@@ -112,7 +124,8 @@ func TestCreateRelation_Success(t *testing.T) {
 		},
 	}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, true, true)
+	userId := int64(1)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, true, &userId)
 
 	body := `{"fromId":1,"targetId":2,"relationType":"BLOCK"}`
 	req := httptest.NewRequest(http.MethodPost, "/relation", strings.NewReader(body))
@@ -136,7 +149,7 @@ func TestCreateRelation_Success(t *testing.T) {
 func TestGetAllRelationsByFromId_InvalidParam(t *testing.T) {
 	mock := &mockRelationService{}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, false, nil)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, false, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/relations/notanint", nil)
 	w := httptest.NewRecorder()
@@ -150,7 +163,7 @@ func TestGetAllRelationsByFromId_InvalidParam(t *testing.T) {
 func TestGetAllRelationsByFromId_Unauthorized(t *testing.T) {
 	mock := &mockRelationService{}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, false, nil)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, false, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/relations/1", nil)
 	w := httptest.NewRecorder()
@@ -162,15 +175,31 @@ func TestGetAllRelationsByFromId_Unauthorized(t *testing.T) {
 }
 
 func TestGetAllRelationsByFromId_Success(t *testing.T) {
-	mock := &mockRelationService{
-		AllRelations: []domainrelation.Relation{
-			{FromID: 1, ToID: 2, Type: domainrelation.RelationType("FRIEND")},
+	mock := &mockRelationService{}
+	useCase := &mockGetRelationsUseCase{
+		result: usecases.GetRelationsPagedOutput{
+			Data: []domainrelation.Relation{
+				{
+					FromID:          1,
+					ToID:            2,
+					FromProfileName: "John",
+					ToProfileName:   "Jane",
+					Type:            domainrelation.RelationType("FRIEND"),
+					Status:          domainrelation.RelationStatus("ACCEPTED"),
+				},
+			},
+			Page:        0,
+			TotalItems:  1,
+			TotalPages:  1,
+			HasNext:     false,
+			HasPrevious: false,
 		},
 	}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, true, true)
+	userId := int64(1)
+	router := setupRouterWithService(svc, useCase, true, &userId)
 
-	req := httptest.NewRequest(http.MethodGet, "/relations/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/relations/1?page=0", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -178,19 +207,64 @@ func TestGetAllRelationsByFromId_Success(t *testing.T) {
 		t.Fatalf("expected 200 on success, got %d, body: %s", w.Code, w.Body.String())
 	}
 
-	var resp map[string][]domainrelation.Relation
+	var resp map[string]interface{}
 	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v, body: %s", err, w.Body.String())
 	}
-	if len(resp["relations"]) != 1 {
-		t.Fatalf("expected 1 relation, got %d", len(resp["relations"]))
+
+	// validar estrutura correta
+	dataVal, ok := resp["Data"]
+	if !ok {
+		t.Fatalf("response missing Data field: %s", w.Body.String())
+	}
+	dataSlice, ok := dataVal.([]interface{})
+	if !ok {
+		t.Fatalf("Data field is not array: %#v", dataVal)
+	}
+	if len(dataSlice) != 1 {
+		t.Fatalf("expected 1 relation, got %d", len(dataSlice))
+	}
+
+	// validar paginação
+	if page, ok := resp["Page"]; !ok || page != float64(0) {
+		t.Fatalf("expected Page=0, got %v", page)
+	}
+	if totalItems, ok := resp["TotalItems"]; !ok || totalItems != float64(1) {
+		t.Fatalf("expected TotalItems=1, got %v", totalItems)
+	}
+	if totalPages, ok := resp["TotalPages"]; !ok || totalPages != float64(1) {
+		t.Fatalf("expected TotalPages=1, got %v", totalPages)
+	}
+	if hasNext, ok := resp["HasNext"]; !ok || hasNext != false {
+		t.Fatalf("expected HasNext=false, got %v", hasNext)
+	}
+}
+
+func TestGetAllRelationsByFromId_UseCaseError(t *testing.T) {
+	mock := &mockRelationService{}
+	useCase := &mockGetRelationsUseCase{
+		result: usecases.GetRelationsPagedOutput{},
+		err:    errors.New("usecase error"),
+	}
+	var svc domainrelation.IRelationService = mock
+	userId := int64(1)
+	router := setupRouterWithService(svc, useCase, true, &userId)
+
+	req := httptest.NewRequest(http.MethodGet, "/relations/1?page=0", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500 on usecase error, got %d, body: %s", w.Code, w.Body.String())
 	}
 }
 
 func TestAcceptRelation_InvalidIds(t *testing.T) {
 	mock := &mockRelationService{}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, true, true)
+
+	userId := int64(1)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, true, &userId)
 
 	req := httptest.NewRequest(http.MethodPut, "/relations/notint/5/accept", nil)
 	w := httptest.NewRecorder()
@@ -204,7 +278,7 @@ func TestAcceptRelation_InvalidIds(t *testing.T) {
 func TestAcceptRelation_Unauthorized(t *testing.T) {
 	mock := &mockRelationService{}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, false, nil)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, false, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/relations/1/2/accept", nil)
 	w := httptest.NewRecorder()
@@ -218,7 +292,8 @@ func TestAcceptRelation_Unauthorized(t *testing.T) {
 func TestAcceptRelation_Success(t *testing.T) {
 	mock := &mockRelationService{AcceptErr: nil}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, true, true)
+	userId := int64(1)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, true, &userId)
 
 	req := httptest.NewRequest(http.MethodPut, "/relations/1/2/accept", nil)
 	w := httptest.NewRecorder()
@@ -236,7 +311,8 @@ func TestGetAllRelationPendingByFromId_Success(t *testing.T) {
 		},
 	}
 	var svc domainrelation.IRelationService = mock
-	router := setupRouterWithService(svc, true, true)
+	userId := int64(1)
+	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, true, &userId)
 
 	req := httptest.NewRequest(http.MethodGet, "/relations/1/pending", nil)
 	w := httptest.NewRecorder()

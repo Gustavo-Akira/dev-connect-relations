@@ -16,6 +16,7 @@ import (
 	profileRepository "devconnectrelations/internal/adapters/outbound/repository/profile"
 	relationRepository "devconnectrelations/internal/adapters/outbound/repository/profile_relation"
 	stackRepository "devconnectrelations/internal/adapters/outbound/repository/stack"
+	usecases "devconnectrelations/internal/application/relations"
 	"devconnectrelations/internal/domain/city"
 	"devconnectrelations/internal/domain/profile"
 	cityRelationDomain "devconnectrelations/internal/domain/profile_relation/city"
@@ -56,7 +57,8 @@ func setProfile(router *gin.Engine, driver neo4j.DriverWithContext) *profile.Pro
 func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) relation.RelationsRepository {
 	repo := relationRepository.NewNeo4jRelationRepository(driver)
 	relation_service := relation.CreateRelationService(repo)
-	relation_controller := relation_controller.CreateNewRelationsController(relation_service)
+	get_relations_by_from_id_use_case := usecases.GetRelationsPaged{Repo: repo}
+	relation_controller := relation_controller.CreateNewRelationsController(relation_service, &get_relations_by_from_id_use_case)
 	router.POST("/relation", relation_controller.CreateRelation)
 	router.GET("/relation/:fromId", relation_controller.GetAllRelationsByFromId)
 	router.PATCH("/relation/accept/:fromId/:toId", relation_controller.AcceptRelation)

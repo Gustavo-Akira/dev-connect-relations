@@ -6,7 +6,7 @@ import (
 
 type IRelationService interface {
 	CreateRelation(ctx context.Context, relation Relation) (Relation, error)
-	GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]Relation, error)
+	GetAllRelationsByFromId(ctx context.Context, fromId int64, page int64) ([]Relation, error)
 	AcceptRelation(ctx context.Context, fromId int64, toId int64) error
 	GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]Relation, error)
 }
@@ -23,8 +23,10 @@ func (s *RelationService) CreateRelation(ctx context.Context, relation Relation)
 	return s.repository.CreateRelation(ctx, relation)
 }
 
-func (s *RelationService) GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]Relation, error) {
-	return s.repository.GetAllRelationsByFromId(ctx, fromId)
+func (s *RelationService) GetAllRelationsByFromId(ctx context.Context, fromId int64, page int64) ([]Relation, error) {
+	var limit int64 = 20
+	offset := limit * page
+	return s.repository.GetAllRelationsByFromId(ctx, fromId, offset, limit)
 }
 
 func (s *RelationService) AcceptRelation(ctx context.Context, fromId int64, toId int64) error {

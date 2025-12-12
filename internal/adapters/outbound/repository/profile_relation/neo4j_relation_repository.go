@@ -32,7 +32,7 @@ func (r *Neo4jRelationRepository) CreateRelation(ctx context.Context, relation d
 	return relation, nil
 }
 
-func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]domain.Relation, error) {
+func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, fromId int64, offset int64, limit int64) ([]domain.Relation, error) {
 	params := map[string]any{
 		"fromId": fromId,
 	}
@@ -164,4 +164,21 @@ LIMIT 20`
 		jaccardIndices = append(jaccardIndices, jaccardInde)
 	}
 	return jaccardIndices, nil
+}
+
+func (r *Neo4jRelationRepository) CountRelationsByFromId(ctx context.Context, fromId int64) (int64, error) {
+	params := map[string]any{
+		"fromId": fromId,
+	}
+	query := "MATCH (n:Profile {id:$fromId}) RETURN COUNT { (n)-[:Relation]-() } AS total"
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, query, params, neo4j.EagerResultTransformer)
+	if err != nil {
+		return 0, err
+	}
+
+	v, ok := result.Records[0].Get("total")
+	if !ok || v == nil {
+		return 0, nil
+	}
+	return v.(int64), nil
 }

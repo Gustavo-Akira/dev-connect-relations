@@ -2,9 +2,9 @@ package relation_controller
 
 import (
 	relation_dto "devconnectrelations/internal/adapters/inbound/rest/relation/dto"
+	usecases "devconnectrelations/internal/application/relations"
 	"devconnectrelations/internal/domain/profile_relation/relation"
 	"errors"
-
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,11 +13,12 @@ import (
 )
 
 type RelationController struct {
-	service relation.IRelationService
+	service             relation.IRelationService
+	getRelationsUseCase usecases.IGetRelationsPaged
 }
 
-func CreateNewRelationsController(service relation.IRelationService) *RelationController {
-	return &RelationController{service: service}
+func CreateNewRelationsController(service relation.IRelationService, getRelationUseCase usecases.IGetRelationsPaged) *RelationController {
+	return &RelationController{service: service, getRelationsUseCase: getRelationUseCase}
 }
 
 func (c *RelationController) CreateRelation(ctx *gin.Context) {
@@ -53,7 +54,14 @@ func (c *RelationController) CreateRelation(ctx *gin.Context) {
 
 func (c *RelationController) GetAllRelationsByFromId(ctx *gin.Context) {
 	fromId := ctx.Param("fromId")
-	parsedInt, parsedError := strconv.ParseInt(fromId, 10, 32)
+	page := ctx.DefaultQuery("page", "0")
+
+	parsedPage, parsedPageError := strconv.ParseInt(page, 10, 64)
+	if parsedPageError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedPageError.Error()})
+		return
+	}
+	parsedInt, parsedError := strconv.ParseInt(fromId, 10, 64)
 	if parsedError != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": parsedError.Error()})
 		return
@@ -67,12 +75,12 @@ func (c *RelationController) GetAllRelationsByFromId(ctx *gin.Context) {
 		}
 		return
 	}
-	relations, err := c.service.GetAllRelationsByFromId(ctx, int64(parsedInt))
+	relations, err := c.getRelationsUseCase.Execute(ctx, usecases.GetRelationsPagedInput{FromID: int64(parsedInt), Page: parsedPage})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"relations": relations})
+	ctx.JSON(http.StatusOK, relations)
 }
 
 func (c *RelationController) AcceptRelation(ctx *gin.Context) {
@@ -80,6 +88,10 @@ func (c *RelationController) AcceptRelation(ctx *gin.Context) {
 	toId := ctx.Param("toId")
 	parsedFromId, parsedFromError := strconv.ParseInt(fromId, 10, 32)
 	parsedToId, parsedToError := strconv.ParseInt(toId, 10, 32)
+	if parsedFromError != nil || parsedToError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid fromId or toId"})
+		return
+	}
 	authError := CompareAndGetUserId(ctx, parsedFromId)
 	if authError != nil {
 		if authError.Error() == "Unauthorized" {
@@ -89,10 +101,7 @@ func (c *RelationController) AcceptRelation(ctx *gin.Context) {
 		}
 		return
 	}
-	if parsedFromError != nil || parsedToError != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid fromId or toId"})
-		return
-	}
+
 	err := c.service.AcceptRelation(ctx, int64(parsedFromId), int64(parsedToId))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

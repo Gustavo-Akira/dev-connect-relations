@@ -55,7 +55,7 @@ func (m *MockRelationsRepository) JaccardIndexByProfileId(ctx context.Context, p
 func (m *MockRelationsRepository) CreateRelation(context context.Context, relation relation.Relation) (relation.Relation, error) {
 	return relation, nil
 }
-func (m *MockRelationsRepository) GetAllRelationsByFromId(ctx context.Context, fromId int64) ([]relation.Relation, error) {
+func (m *MockRelationsRepository) GetAllRelationsByFromId(ctx context.Context, fromId int64, offset int64, limit int64) ([]relation.Relation, error) {
 	return nil, nil
 }
 func (m *MockRelationsRepository) AcceptRelation(ctx context.Context, fromId int64, toId int64) error {
@@ -63,6 +63,10 @@ func (m *MockRelationsRepository) AcceptRelation(ctx context.Context, fromId int
 }
 func (m *MockRelationsRepository) GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]relation.Relation, error) {
 	return nil, nil
+}
+
+func (m *MockRelationsRepository) CountRelationsByFromId(ctx context.Context, fromId int64) (int64, error) {
+	return 0, nil
 }
 
 type MockStackRelationRepository struct{}
