@@ -24,7 +24,7 @@ func (r *Neo4jRelationRepository) CreateRelation(ctx context.Context, relation d
 		"type":     relation.Type,
 		"status":   relation.Status,
 	}
-	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId}), (toPerson:Profile {id:$targetId}) MERGE (fromPerson)-[r:Relation{type:$type, status:$status}]->(toPerson) RETURN fromPerson", params, neo4j.EagerResultTransformer)
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId}), (toPerson:Profile {id:$targetId}) OPTIONAL MATCH (fromPerson)-[r:Relation]-(toPerson) DELETE r MERGE (fromPerson)-[newR:Relation{type:$type, status:$status}]->(toPerson) RETURN fromPerson", params, neo4j.EagerResultTransformer)
 	if err != nil {
 		return domain.Relation{}, err
 	}
