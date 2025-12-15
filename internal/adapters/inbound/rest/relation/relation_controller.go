@@ -92,7 +92,7 @@ func (c *RelationController) AcceptRelation(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid fromId or toId"})
 		return
 	}
-	authError := CompareAndGetUserId(ctx, parsedFromId)
+	authError := CompareAndGetUserId(ctx, parsedToId)
 	if authError != nil {
 		if authError.Error() == "Unauthorized" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})

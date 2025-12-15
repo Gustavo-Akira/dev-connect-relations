@@ -292,7 +292,7 @@ func TestAcceptRelation_Unauthorized(t *testing.T) {
 func TestAcceptRelation_Success(t *testing.T) {
 	mock := &mockRelationService{AcceptErr: nil}
 	var svc domainrelation.IRelationService = mock
-	userId := int64(1)
+	userId := int64(2)
 	router := setupRouterWithService(svc, &mockGetRelationsUseCase{}, true, &userId)
 
 	req := httptest.NewRequest(http.MethodPut, "/relations/1/2/accept", nil)
