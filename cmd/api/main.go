@@ -28,7 +28,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -123,6 +125,47 @@ func setCors(router *gin.Engine) {
 	router.Use(cors.New(config))
 }
 
+func connectNeo4jWithRetry(ctx context.Context, uri, user, password string) (neo4j.DriverWithContext, error) {
+	// configurable via env vars
+	retryCount := 10
+	retryInterval := 5 * time.Second
+	if v, ok := os.LookupEnv("NEO4J_RETRY_COUNT"); ok {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			retryCount = n
+		}
+	}
+	if v, ok := os.LookupEnv("NEO4J_RETRY_INTERVAL_SECONDS"); ok {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			retryInterval = time.Duration(n) * time.Second
+		}
+	}
+
+	var lastErr error
+	for i := 0; i < retryCount; i++ {
+		select {
+		case <-ctx.Done():
+			if lastErr == nil {
+				return nil, ctx.Err()
+			}
+			return nil, fmt.Errorf("context canceled: %w", lastErr)
+		default:
+		}
+
+		driver, err := neo4j.NewDriverWithContext(uri, neo4j.BasicAuth(user, password, ""))
+		if err == nil {
+			if err = driver.VerifyConnectivity(ctx); err == nil {
+				fmt.Println("Connected to Neo4j")
+				return driver, nil
+			}
+			_ = driver.Close(ctx)
+		}
+		lastErr = err
+		fmt.Printf("Neo4j not ready (attempt %d/%d): %v. Retrying in %v\n", i+1, retryCount, err, retryInterval)
+		time.Sleep(retryInterval)
+	}
+	return nil, fmt.Errorf("could not connect to Neo4j after %d attempts: %w", retryCount, lastErr)
+}
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -134,17 +177,11 @@ func main() {
 	dbUri := GetEnv("NEO4J_URI", "neo4j://localhost:7687")
 	dbUser := GetEnv("NEO4J_USER", "neo4j")
 	dbPassword := GetEnv("NEO4J_PASSWORD", "Kadeira4.0")
-	driver, err := neo4j.NewDriverWithContext(
-		dbUri,
-		neo4j.BasicAuth(dbUser, dbPassword, ""))
+	driver, err := connectNeo4jWithRetry(ctx, dbUri, dbUser, dbPassword)
 	if err != nil {
 		panic(err)
 	}
 	defer driver.Close(ctx)
-	err = driver.VerifyConnectivity(ctx)
-	if err != nil {
-		panic(err)
-	}
 	profile_service := setProfile(router, driver)
 	relationRepo := setRelation(router, driver)
 	stackService := setStack(router, driver)
