@@ -65,6 +65,7 @@ func setRelation(router *gin.Engine, driver neo4j.DriverWithContext) relation.Re
 	router.GET("/relation/:fromId", relation_controller.GetAllRelationsByFromId)
 	router.PATCH("/relation/accept/:fromId/:toId", relation_controller.AcceptRelation)
 	router.GET("/relation/pending/:fromId", relation_controller.GetAllRelationPendingByFromId)
+	router.GET("/relation/:fromId/:toId", relation_controller.GetRelationByFromIdAndToId)
 	return repo
 }
 

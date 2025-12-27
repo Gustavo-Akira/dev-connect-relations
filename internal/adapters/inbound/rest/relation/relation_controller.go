@@ -135,6 +135,32 @@ func (c *RelationController) GetAllRelationPendingByFromId(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"relations": relations})
 }
 
+func (c *RelationController) GetRelationByFromIdAndToId(ctx *gin.Context) {
+	fromId := ctx.Param("fromId")
+	toId := ctx.Param("toId")
+	parsedFromId, parsedFromError := strconv.ParseInt(fromId, 10, 64)
+	parsedToId, parsedToError := strconv.ParseInt(toId, 10, 64)
+	if parsedFromError != nil || parsedToError != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid fromId or toId"})
+		return
+	}
+	authError := CompareAndGetUserId(ctx, parsedFromId)
+	if authError != nil {
+		if authError.Error() == "Unauthorized" {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authError.Error()})
+		} else {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": authError.Error()})
+		}
+		return
+	}
+	relation, err := c.service.GetRelationByFromIdAndToId(ctx, parsedFromId, parsedToId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"relation": relation})
+}
+
 func CompareAndGetUserId(ctx *gin.Context, comparedId int64) error {
 	userIDv, exists := ctx.Get("userId")
 
