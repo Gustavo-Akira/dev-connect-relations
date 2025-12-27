@@ -32,6 +32,35 @@ func (r *Neo4jRelationRepository) CreateRelation(ctx context.Context, relation d
 	return relation, nil
 }
 
+func (r *Neo4jRelationRepository) GetRelationByFromIdAndToId(ctx context.Context, fromId int64, toId int64) (*domain.Relation, error) {
+	params := map[string]any{
+		"fromId": fromId,
+		"toId":   toId,
+	}
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId})-[r:Relation]-(toPerson:Profile {id: $toId}) RETURN r, toPerson, fromPerson", params, neo4j.EagerResultTransformer)
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Records) == 0 {
+		return nil, nil
+	}
+	record := result.Records[0]
+	relationNode, _ := record.Get("r")
+	toPersonNode, _ := record.Get("toPerson")
+	fromPersonNode, _ := record.Get("fromPerson")
+	fromPersonProps := fromPersonNode.(neo4j.Node).Props
+	relationProps := relationNode.(neo4j.Relationship).Props
+	toPersonProps := toPersonNode.(neo4j.Node).Props
+	relation := domain.Relation{
+		FromID:          fromId,
+		FromProfileName: fromPersonProps["name"].(string),
+		ToID:            toId,
+		ToProfileName:   toPersonProps["name"].(string),
+		Type:            domain.RelationType(relationProps["type"].(string)),
+		Status:          domain.RelationStatus(relationProps["status"].(string)),
+	}
+	return &relation, nil
+}
 func (r *Neo4jRelationRepository) GetAllRelationsByFromId(ctx context.Context, fromId int64, offset int64, limit int64) ([]domain.Relation, error) {
 	params := map[string]any{
 		"fromId": fromId,

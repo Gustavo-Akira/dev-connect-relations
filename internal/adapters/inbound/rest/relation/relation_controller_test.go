@@ -42,6 +42,10 @@ func (m *mockRelationService) GetAllRelationPendingByFromId(ctx context.Context,
 	return m.PendingRelations, m.PendingErr
 }
 
+func (m *mockRelationService) GetRelationByFromIdAndToId(ctx context.Context, fromId int64, toId int64) (*domainrelation.Relation, error) {
+	return nil, nil
+}
+
 type mockGetRelationsUseCase struct {
 	result usecases.GetRelationsPagedOutput
 	err    error

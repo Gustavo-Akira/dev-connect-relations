@@ -12,4 +12,5 @@ type RelationsRepository interface {
 	GetAllRelationPendingByFromId(ctx context.Context, fromId int64) ([]Relation, error)
 	JaccardIndexByProfileId(ctx context.Context, profileID int64) ([]recommendation.Recommendation, error)
 	CountRelationsByFromId(ctx context.Context, fromId int64) (int64, error)
+	GetRelationByFromIdAndToId(ctx context.Context, fromId int64, toId int64) (*Relation, error)
 }
