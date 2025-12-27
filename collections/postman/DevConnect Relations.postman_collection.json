@@ -1,0 +1,365 @@
+{
+	"info": {
+		"_postman_id": "20672d7f-7fa9-4d6e-aa7c-edacf167deee",
+		"name": "DevConnect Relations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12357489"
+	},
+	"item": [
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "Create Profile",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\":251,\r\n    \"Name\":\"Gustavo Lima\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/profile",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Profile",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/profile/6",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"profile",
+								"6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get profile",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Name\":\"Javascript\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:8082/profile/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"profile",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Relation",
+			"item": [
+				{
+					"name": "Create new Relation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"FromId\": 5,\r\n    \"TargetId\":24,\r\n    \"RelationType\": \"Friend\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/relation",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"relation"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get relation by from id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/relation/5",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"relation",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Relation",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/relation/accept/250/251",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"relation",
+								"accept",
+								"250",
+								"251"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get pending relations",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stack",
+			"item": [
+				{
+					"name": "Create Stack",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Name\":\"Javascript\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/stack",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"stack"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Stack by name",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Name\":\"Javascript\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:8082/stack/go",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"stack",
+								"go"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete stack by name",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/stack/go",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"stack",
+								"go"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add stack relation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"stack_name\":\"go\",\r\n    \"profile_id\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/stack-relation",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"stack-relation"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete stack",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"stack_name\":\"go\",\r\n    \"profile_id\": 1\r\n}"
+						},
+						"url": {
+							"raw": "localhost:8082/stack-relation",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"stack-relation"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "City",
+			"item": [
+				{
+					"name": "Create city",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Marilia\",\r\n    \"state\": \"SP\",\r\n    \"country\": \"BR\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/city",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"city"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get city by full name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/city/marilia,sp,br",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"city",
+								"marilia,sp,br"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add city relation",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Recommendation",
+			"item": [
+				{
+					"name": "Get recommendations",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
