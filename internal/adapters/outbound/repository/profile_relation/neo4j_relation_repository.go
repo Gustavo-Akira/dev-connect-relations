@@ -37,7 +37,7 @@ func (r *Neo4jRelationRepository) GetRelationByFromIdAndToId(ctx context.Context
 		"fromId": fromId,
 		"toId":   toId,
 	}
-	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (fromPerson:Profile {id: $fromId})-[r:Relation]-(toPerson:Profile {id: $toId}) RETURN r, toPerson, fromPerson", params, neo4j.EagerResultTransformer)
+	result, err := neo4j.ExecuteQuery(ctx, r.driver, "MATCH (a:Profile {id: $fromId})-[r:Relation]-(b:Profile {id: $toId}) RETURN r, a AS a, b AS b, id(startNode(r)) AS startId, id(endNode(r)) AS endId", params, neo4j.EagerResultTransformer)
 	if err != nil {
 		return nil, err
 	}
@@ -46,15 +46,33 @@ func (r *Neo4jRelationRepository) GetRelationByFromIdAndToId(ctx context.Context
 	}
 	record := result.Records[0]
 	relationNode, _ := record.Get("r")
-	toPersonNode, _ := record.Get("toPerson")
-	fromPersonNode, _ := record.Get("fromPerson")
-	fromPersonProps := fromPersonNode.(neo4j.Node).Props
+	aNode, _ := record.Get("a")
+	bNode, _ := record.Get("b")
+	startIdVal, _ := record.Get("startId")
 	relationProps := relationNode.(neo4j.Relationship).Props
-	toPersonProps := toPersonNode.(neo4j.Node).Props
+	startId := startIdVal.(int64)
+
+	var fromNode neo4j.Node
+	var toNode neo4j.Node
+	if startId == aNode.(neo4j.Node).Id {
+		fromNode = aNode.(neo4j.Node)
+		toNode = bNode.(neo4j.Node)
+	} else {
+		fromNode = bNode.(neo4j.Node)
+		toNode = aNode.(neo4j.Node)
+	}
+
+	fromPersonProps := fromNode.Props
+	toPersonProps := toNode.Props
+
+	// use the domain/profile id stored in node properties, not the internal Neo4j node id
+	fromPropID := fromPersonProps["id"].(int64)
+	toPropID := toPersonProps["id"].(int64)
+
 	relation := domain.Relation{
-		FromID:          fromId,
+		FromID:          fromPropID,
 		FromProfileName: fromPersonProps["name"].(string),
-		ToID:            toId,
+		ToID:            toPropID,
 		ToProfileName:   toPersonProps["name"].(string),
 		Type:            domain.RelationType(relationProps["type"].(string)),
 		Status:          domain.RelationStatus(relationProps["status"].(string)),
