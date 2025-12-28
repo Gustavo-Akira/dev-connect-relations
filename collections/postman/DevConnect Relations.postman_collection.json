@@ -160,6 +160,27 @@
 						"header": []
 					},
 					"response": []
+				},
+				{
+					"name": "Get relation by from id and to id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/relation/28/to/29",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"relation",
+								"28",
+								"to",
+								"29"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
