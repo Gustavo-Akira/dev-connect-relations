@@ -158,7 +158,7 @@ func (c *RelationController) GetRelationByFromIdAndToId(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"relation": relation})
+	ctx.JSON(http.StatusOK, relation)
 }
 
 func CompareAndGetUserId(ctx *gin.Context, comparedId int64) error {
