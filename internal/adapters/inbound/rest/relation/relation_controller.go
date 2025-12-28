@@ -49,7 +49,7 @@ func (c *RelationController) CreateRelation(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": createError.Error()})
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{"relation": savedRelation})
+	ctx.JSON(http.StatusCreated, savedRelation)
 }
 
 func (c *RelationController) GetAllRelationsByFromId(ctx *gin.Context) {
